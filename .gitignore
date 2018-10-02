@@ -4,3 +4,4 @@ node_modules/
 .vagrant
 
 test/data/*
+test/files/
