@@ -1,22 +1,31 @@
-/*jshint node: true*/
+/* jshint node: true */
 /*global define, require, describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, spyOn*/
 
-'use string';
+"use string";
 
-var debug = require('debug')('wayback:main');
+var debug = require("debug")("wayback:main");
 var Wayback = require("../");
 
+/*
+var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
+
 var restore = Wayback.restore({
-    directory: 'test/restores/cashpropertysolutions.co.uk',
-    url: 'http://www.cashpropertysolutions.co.uk/',
+    directory: "test/restores/cashpropertysolutions.co.uk",
+    url:
+        "http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk"
+});
+*/
+var restore = Wayback.restore({
+    directory: "test/restores/cashpropertysolutions.co.uk",
+    url: "http://www.cashpropertysolutions.co.uk/",
     //domain: 'cashpropertysolutions.co.uk',
-    timestamp: '20150531',
+    timestamp: "20150531",
     links: true,
     log: true
 });
 restore.start();
-restore.on('completed', function() {
-    console.log('restorationg has completed');
+restore.on("completed", function() {
+    console.log("restorationg has completed");
     //console.log(this);
     //console.log(this.getLog());
 });
