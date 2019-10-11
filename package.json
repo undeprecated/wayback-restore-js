@@ -2,10 +2,10 @@
   "name": "websiterestore-js",
   "version": "1.0.0",
   "description": "Website restoration tool written for node js.",
-  "main": "index.js",
+  "main": "wayback-restore/index.js",
   "scripts": {
     "test": "mocha test test/spec/**/*.test.js",
-    "dev": "DEBUG=wayback:* node test/restore"
+    "restore": "DEBUG=wayback:* node test/restore"
   },
   "author": "Nick Curry",
   "license": "Unlicense",

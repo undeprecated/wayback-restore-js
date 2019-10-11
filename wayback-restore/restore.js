@@ -7,8 +7,22 @@ var debug = require( 'debug' )( 'wayback:restore' );
 // Third Party Modules
 
 // Local Modules
+var parse = require( './parse' );
 var Process = require( './process' );
-var helper = require( './helpers' );
+
+/*
+var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
+
+var restore = Wayback.restore({
+    url:
+        "http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk"
+});
+
+var restore = Wayback.restore({
+    domain: 'cashpropertysolutions.co.uk',
+    timestamp: "20150531"
+});
+*/
 
 /**
  * This is the main restore process of a Wayback Machine archive.
@@ -18,19 +32,15 @@ var helper = require( './helpers' );
  */
 function restore( settings ) {
     if ( settings.url ) {
-        return createProcess( settings );
-    }
+        settings.domain = parse.parseDomain( settings.url );
 
-    if ( settings.domain ) {
+        return new Process( settings );
+    } else if ( settings.domain ) {
         settings.url = settings.url = `http://${ settings.domain }`;
-        return createProcess( settings );
+        settings.domain = parse.parseDomain( settings.url );
+
+        return new Process( settings );
     }
-}
-
-function createProcess( settings ) {
-    settings.domain = helper.parseDomainToRestore( settings.url );
-
-    return new Process( settings );
 }
 
 // @TODO implement redirect

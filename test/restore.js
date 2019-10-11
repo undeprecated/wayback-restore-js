@@ -14,6 +14,15 @@ var restore = Wayback.restore({
     url:
         "http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk"
 });
+
+var restore = Wayback.restore({
+    domain: 'cashpropertysolutions.co.uk',
+    timestamp: "20150531"
+});
+
+const domain = Wayback.parseDomain('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
+const timestamp = Wayback.parseTimestamp('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
+const {domain, timestamp} = Wayback.parse('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
 */
 var restore = Wayback.restore({
     directory: "test/restores/cashpropertysolutions.co.uk",
