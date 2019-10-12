@@ -1,5 +1,7 @@
-var url = require("url");
-var parseDomain = require("parse-domain");
+var debug = require("debug")("wayback:parse");
+
+var mod_url = require("url");
+var parse_domain = require("parse-domain");
 
 const Wayback = {
     parse: url => {
@@ -7,9 +9,9 @@ const Wayback = {
         x = Wayback.strip(x);
         let [timestamp, web] = x.split("/", 1);
 
-        web = x.replace(timestamp, "");
+        web = x.replace(timestamp, "").replace("/", "");
 
-        return {domain: parseDomain(web), timestamp: timestamp};
+        return {url: web, timestamp: timestamp};
     },
     strip: url => {
         let x = url;
@@ -19,31 +21,23 @@ const Wayback = {
     }
 };
 
-function parseTimestamp(url) {
-    let x = url;
-    x = Wayback.strip(x);
-    let [timestamp, web] = x.split("/", 1);
+function parseTimestamp(from_url) {
+    let {url, timestamp} = Wayback.parse(from_url);
+
     return timestamp;
 }
 
-function parseDomain(href) {
-    //var domain = href.replace(ARCHIVE_SOURCE, '');
-
-    var myURL = url.parse(href);
-
-    //var matches = myURL.pathname.match(/http.*/gi);
-
-    //if (matches) {
-    //var link = parseDomain(url.parse(matches[0]).hostname);
-    var link = parseDomain(myURL.hostname);
+function parseDomain(from_url) {
+    var {url, timestamp} = Wayback.parse(from_url);
+    var myURL = mod_url.parse(url);
+    var link = parse_domain(myURL.hostname);
 
     if (link) {
         return link.domain + "." + link.tld;
+    } else {
+        debug("Could not extract an archived link");
+        return;
     }
-    //}
-
-    debug("Could not extract an archived link");
-    return;
 }
 
 module.exports = {
