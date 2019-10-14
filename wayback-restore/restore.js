@@ -31,15 +31,39 @@ var restore = Wayback.restore({
  * @return {[type]}      [description]
  */
 function restore( settings ) {
-    if ( settings.url ) {
-        settings.domain = parse.parseDomain( settings.url );
+    if ( typeof settings === 'string' ) {
+        let url = settings;
+        settings = {};
+        settings.url = url;
+    }
+
+    const defaults = {
+        timestamp: '',
+        url: '',
+        domain: '',
+        links: false, // restore links
+        assets: true, // restore assets
+        directory: 'restore', // base directory
+        websiteDirectory: 'website', // directory for restored content
+        log: false,
+        logDir: 'logs', // directory for log files,
+        logFile: 'restore.log'
+    }
+
+    settings = Object.assign( defaults, settings );
+
+    if ( settings.url !== '' ) {
+        const { domain, timestamp } = parse.parse( settings.url );
+        settings.domain = domain;
+        settings.timestamp = timestamp
 
         return new Process( settings );
-    } else if ( settings.domain ) {
-        settings.url = settings.url = `http://${ settings.domain }`;
-        settings.domain = parse.parseDomain( settings.url );
+    } else if ( settings.domain !== '' && settings.timestamp !== '' ) {
+        settings.url = `https://web.archive.org/web/${ settings.timestamp}/http://${ settings.domain }`;
 
         return new Process( settings );
+    } else {
+        throw "Invalid settings";
     }
 }
 

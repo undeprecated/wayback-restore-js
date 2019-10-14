@@ -15,7 +15,6 @@ var path = require( 'path' );
 
 // Third-Party Modules
 var fs = require( 'fs-extra' );
-var _ = require( "lodash" );
 //var cheerio = require("cheerio");
 
 // Local Modules
@@ -43,20 +42,7 @@ var EVENT = core.EVENTS;
 function Process( settings ) {
     EventEmitter.call( this );
 
-    this.settings = {
-        timestamp: '',
-        url: '',
-        domain: '',
-        links: false, // restore links
-        assets: true, // restore assets
-        directory: 'restore', // base directory
-        websiteDirectory: 'website', // directory for restored content
-        log: false,
-        logDir: 'logs', // directory for log files,
-        logFile: 'restore.log'
-    };
-
-    _.merge( this.settings, settings );
+    this.settings = settings;
 
     debug( 'Settings', this.settings );
 

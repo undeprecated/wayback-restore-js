@@ -1,7 +1,5 @@
 var setup = require("../setup");
-
 var parse = require("../../wayback-restore");
-//var helper = require('../../lib/helpers');
 
 var expect = setup.expect;
 
@@ -36,7 +34,7 @@ describe("parse.js", function() {
         });
 
         it("should have a domain property", function() {
-            expect(r).to.have.property("url");
+            expect(r).to.have.property("domain");
         });
 
         it("should have a timestamp property", function() {
@@ -47,8 +45,8 @@ describe("parse.js", function() {
             expect(r.timestamp).to.equal("20150531");
         });
 
-        it("can parse url", function() {
-            expect(r.url).to.equal("http://www.cashpropertysolutions.co.uk");
+        it("can parse domain", function() {
+            expect(r.domain).to.equal("cashpropertysolutions.co.uk");
         });
     });
 });
