@@ -1,9 +1,10 @@
 {
-  "name": "websiterestore-js",
+  "name": "websiterestore",
   "version": "1.0.0",
   "description": "Website restoration tool written for node js.",
   "main": "wayback-restore/index.js",
   "scripts": {
+    "build": "grunt build",
     "test": "mocha test test/spec/**/*.test.js",
     "restore": "DEBUG=wayback:* node test/restore"
   },
@@ -16,21 +17,29 @@
   },
   "homepage": "https://bitbucket.org/cnick79/websiterestore-js#readme",
   "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "babel-cli": "^6.26.0",
+    "babelify": "^10.0.0",
     "chai": "^4.1.2",
     "debug": "^2.2.0",
-    "grunt": "^1.0.3",
+    "grunt": "^1.0.4",
+    "grunt-browserify": "^5.3.0",
+    "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-uglify": "^4.0.1",
     "grunt-contrib-watch": "^1.1.0",
+    "load-grunt-tasks": "^5.1.0",
     "mocha": "^5.2.0"
   },
   "dependencies": {
     "async": "^2.6.1",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "bluebird": "^3.5.2",
     "cheerio": "^0.22.0",
     "event-stream": "^3.3.2",
     "fs-extra": "^7.0.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.15",
     "parse-domain": "^0.2.1"
   }
 }
