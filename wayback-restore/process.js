@@ -6,16 +6,13 @@
 // Core Modules
 var debug = require( 'debug' )( 'wayback:process' );
 var es = require( 'event-stream' );
-//var Promise = require('bluebird');
 var util = require( 'util' );
 var EventEmitter = require( 'events' );
 var url = require( 'url' );
 var path = require( 'path' );
-//var parseDomain = require('parse-domain');
 
 // Third-Party Modules
 var fs = require( 'fs-extra' );
-//var cheerio = require("cheerio");
 
 // Local Modules
 var core = require( './core' );
@@ -23,9 +20,6 @@ var help = require( './helpers' );
 var Asset = require( './asset' ).Asset;
 var convertLinkToKey = require( './asset' ).convertLinkToKey;
 var cdx = require( './cdx' );
-//var download = require('./download')(2);
-
-//Promise.promisifyAll(Database);
 
 var ARCHIVE_SOURCE = core.ARCHIVE_SOURCE;
 
