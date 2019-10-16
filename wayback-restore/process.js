@@ -1,4 +1,4 @@
-/* jshint node: true, esversion: 6 */
+.next/* jshint node: true, esversion: 6 */
 /* global define, require, module, Promise, Map, async */
 
 'use strict';
@@ -63,7 +63,7 @@ Process.prototype.start = async function () {
         //output: 'json'
     } );
 
-    await this.process( me.settings.url );
+    await this.next( me.settings.url );
 
     this.complete();
 };
@@ -112,7 +112,7 @@ Process.prototype.findAssetByKey = async function ( key ) {
     } );
 };
 
-Process.prototype.process = async function ( urls ) {
+Process.prototype.next = async function ( urls ) {
     var me = this;
     var i;
 
@@ -135,11 +135,11 @@ Process.prototype.process = async function ( urls ) {
 
                     if ( me.settings.assets ) {
                         debug( 'restoring assets' );
-                        await me.process( asset.assets );
+                        await me.next( asset.assets );
                     }
                     if ( me.settings.links ) {
                         debug( 'restoring links' );
-                        await me.process( asset.links );
+                        await me.next( asset.links );
                     }
                 } else {
                     debug( 'already restored url', asset.original_url );
@@ -179,11 +179,12 @@ Process.prototype.complete = function () {
 
     me.end_dt = Date.now();
 
-    me.emit( 'completed' );
-
     if ( me.settings.log ) {
         me.saveToFile( me.settings.logDir + '/' + me.settings.logFile, JSON.stringify( me.getLog(), null, 2 ) );
     }
+
+    me.emit( 'completed' );
+    //this.onCompleted(project_results);
 };
 
 Process.prototype.saveAsset = async function ( asset ) {
