@@ -1,4 +1,4 @@
-.next/* jshint node: true, esversion: 6 */
+/* jshint node: true, esversion: 6 */
 /* global define, require, module, Promise, Map, async */
 
 'use strict';
@@ -44,16 +44,21 @@ function Process( settings ) {
         cdx: new Map(),
         restored: {}
     };
+
+    this.results = {
+        restored_count: 0,
+        failed_count: 0
+    };
 }
 
 util.inherits( Process, EventEmitter );
 
-Process.prototype.start = async function () {
-    var me = this;
+Process.prototype.onCompleted = function ( results ) {};
 
+Process.prototype.start = async function () {
     this.emit( EVENT.STARTED );
 
-    await this.createOutputDirectory();
+    await this.createOutputDirectory( this.settings.directory );
 
     await this.fetchCdx( {
         url: this.settings.domain + '*',
@@ -63,7 +68,7 @@ Process.prototype.start = async function () {
         //output: 'json'
     } );
 
-    await this.next( me.settings.url );
+    await this.restore( me.settings.url );
 
     this.complete();
 };
@@ -112,7 +117,7 @@ Process.prototype.findAssetByKey = async function ( key ) {
     } );
 };
 
-Process.prototype.next = async function ( urls ) {
+Process.prototype.restore = async function ( urls ) {
     var me = this;
     var i;
 
@@ -131,15 +136,30 @@ Process.prototype.next = async function ( urls ) {
                 debug( 'found asset to restore for url', asset.original_url );
 
                 if ( !me.hasBeenRestored( asset ) ) {
-                    await me.restore( asset );
+                    //await me.restore( asset );
+                    me.setRestoring( asset );
+
+                    try {
+                        await asset.fetch( true );
+
+                        debug( 'save asset', asset.original_url );
+                        await me.saveAsset( asset );
+
+                        asset.clear();
+
+                        debug( 'set restored', asset.original_url );
+                        me.setRestored( asset );
+                    } catch ( error ) {
+                        me.restoreFailed( error, asset );
+                    }
 
                     if ( me.settings.assets ) {
                         debug( 'restoring assets' );
-                        await me.next( asset.assets );
+                        await me.restore( asset.assets );
                     }
                     if ( me.settings.links ) {
                         debug( 'restoring links' );
-                        await me.next( asset.links );
+                        await me.restore( asset.links );
                     }
                 } else {
                     debug( 'already restored url', asset.original_url );
@@ -148,26 +168,6 @@ Process.prototype.next = async function ( urls ) {
         } catch ( err ) {
             debug( err );
         }
-    }
-};
-
-Process.prototype.restore = async function ( asset ) {
-    var me = this;
-
-    me.setRestoring( asset );
-
-    try {
-        await asset.fetch( true );
-
-        debug( 'save asset', asset.original_url );
-        await me.saveAsset( asset );
-
-        asset.clear();
-
-        debug( 'set restored', asset.original_url );
-        me.setRestored( asset );
-    } catch ( error ) {
-        me.restoreFailed( error, asset );
     }
 };
 
@@ -180,11 +180,12 @@ Process.prototype.complete = function () {
     me.end_dt = Date.now();
 
     if ( me.settings.log ) {
-        me.saveToFile( me.settings.logDir + '/' + me.settings.logFile, JSON.stringify( me.getLog(), null, 2 ) );
+        me.saveToFile( me.settings.logDir + '/' + me.settings.logFile, JSON.stringify( me.getLogData(), null, 2 ) );
     }
 
-    me.emit( 'completed' );
-    //this.onCompleted(project_results);
+    me.emit( 'completed', me.results );
+
+    me.onCompleted( me.results );
 };
 
 Process.prototype.saveAsset = async function ( asset ) {
@@ -192,63 +193,6 @@ Process.prototype.saveAsset = async function ( asset ) {
     await this.saveToFile( this.settings.websiteDirectory + '/' + asset.filename, asset.content );
     return asset;
 };
-
-/**
- * Extract the links to assets ie images, CSS, JS
- *
- * @param page {RestorePage} The object to find more links to restore.
- * @return {Array}  Links found
- *
-Process.prototype.extractAssets = function($) {
-    var links = [];
-
-    $('[src], link[href]').each(function(index, link) {
-        var src = $(link).attr('src');
-
-        if (src) {
-            links.push(src);
-            $(link).attr('src', help.makeRelative(src));
-        }
-
-        var href = $(link).attr('href');
-        if (href) {
-            links.push(href);
-            $(link).attr('href', help.makeRelative(href));
-        }
-    });
-
-    return links;
-};
-
-Process.prototype.extractLinks = function($) {
-    var restore = this,
-        domain = this.settings.domain,
-        links = [];
-
-    // get all hrefs
-    $('a[href]').each(function(index, a) {
-        var href = $(a).attr('href');
-
-        if (filter(href)) {
-            links.push(href);
-        }
-    });
-
-    return links;
-};
-*/
-/**
- * Remove extraneous code from the restored content and cleanup links.
- *
-Process.prototype.contentCleanup = function(content) {
-    //content = content.replace(/(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{this.options.domain})?)/gim, '');
-    content = content.replace(/(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{this.settings.domain})?)/gim, '');
-
-    content = content.replace(/(https?:)?\/\/web.archive.org/gi, '');
-
-    return content;
-};
-*/
 
 Process.prototype.setRestoring = function ( asset ) {
     asset.setRestoring();
@@ -264,10 +208,6 @@ Process.prototype.setRestored = function ( asset ) {
     return asset;
 };
 
-Process.prototype.hasBeenRestored = function ( asset ) {
-    return !!this.db.restored[ asset.key ];
-};
-
 Process.prototype.restoreFailed = function ( error, asset ) {
     debug( 'restore failed', asset );
     //debug('snapshot', asset.getSnapshot());
@@ -277,32 +217,18 @@ Process.prototype.restoreFailed = function ( error, asset ) {
     this.emit( STATUS.FAILED, asset );
 };
 
-// Load me from database
-//Process.prototype.load = function() {
-//this.db.load();
-//};
-
-//Process.prototype.emptyDb = function(callback) {
-//    this.db.cdx = {};
-/*
-this.db.cdx.db.remove({}, { multi: true }, function (err, numRemoved) {
-    if (err) {
-        return callback(err);
-    }
-    return callback(null, numRemoved);
-}); */
-//};
+Process.prototype.hasBeenRestored = function ( asset ) {
+    return !!this.db.restored[ asset.key ];
+};
 
 /**
  * Create base directory for restore output.
  */
-Process.prototype.createOutputDirectory = async function () {
-    var dir = this.settings.directory;
-
+Process.prototype.createOutputDirectory = async function ( dir ) {
     try {
-        await fs.emptyDir( this.settings.directory )
+        await fs.emptyDir( dir )
     } catch ( err ) {
-        debug( 'Error creating output director', err );
+        debug( 'Error creating output directory', err );
     }
 };
 
@@ -324,7 +250,7 @@ Process.prototype.saveToFile = async function ( filename, content ) {
     }
 };
 
-Process.prototype.getLog = function ( filename ) {
+Process.prototype.getLogData = function ( filename ) {
     var self = this;
     var log = {};
 
@@ -337,18 +263,6 @@ Process.prototype.getLog = function ( filename ) {
 
     return log;
 };
-
-/*
-Process.prototype.saveToBaseDir = function(content, file) {
-    var fh = fs.createWriteStream(this.settings.directory + '/' + file);
-
-    fh.write(content);
-
-    fh.end();
-};
-Process.prototype.saveToLogDir = function(content, file) {
-    this.saveToBaseDir(content, 'logs' + '/' + file);
-};*/
 
 function convertLinkToLocalFile( domain, link ) {
     var file;

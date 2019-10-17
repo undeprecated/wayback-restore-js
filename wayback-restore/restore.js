@@ -31,12 +31,6 @@ var restore = Wayback.restore({
  * @return {[type]}      [description]
  */
 function restore( settings ) {
-    if ( typeof settings === 'string' ) {
-        let url = settings;
-        settings = {};
-        settings.url = url;
-    }
-
     const defaults = {
         timestamp: '',
         url: '',
@@ -50,22 +44,40 @@ function restore( settings ) {
         logFile: 'restore.log'
     }
 
+    if ( typeof settings === 'string' ) {
+        let url = settings;
+        settings = {};
+        settings.url = url;
+    }
+
     settings = Object.assign( defaults, settings );
 
     if ( settings.url !== '' ) {
         const { domain, timestamp } = parse.parse( settings.url );
         settings.domain = domain;
         settings.timestamp = timestamp
-
-        return new Process( settings );
     } else if ( settings.domain !== '' && settings.timestamp !== '' ) {
         settings.url = `https://web.archive.org/web/${ settings.timestamp}/http://${ settings.domain }`;
-
-        return new Process( settings );
     } else {
         throw "Invalid settings";
     }
+
+    return new Process( settings );
 }
+
+/*
+// @TODO implement this new method
+function restore( settings ) {
+    const defaults = {...default settings};
+    settings = Object.assign(defaults, settings);
+    this.process = new Process( settings );
+    this.process.on('completed', this.onCompleted);
+    this.process.on('restoring', this.onRestoring);
+    this.process.on('restored', this.onRestored);
+
+    return this.process;
+}
+*/
 
 // @TODO implement redirect
 /*
