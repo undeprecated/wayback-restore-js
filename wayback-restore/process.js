@@ -68,7 +68,7 @@ Process.prototype.start = async function () {
         //output: 'json'
     } );
 
-    await this.restore( me.settings.url );
+    await this.restore( this.settings.url );
 
     this.complete();
 };

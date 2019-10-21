@@ -4,7 +4,7 @@
   "description": "Website restoration tool written for node js.",
   "main": "wayback-restore/index.js",
   "scripts": {
-    "build": "grunt build",
+    "build": "webpack --config ./webpack.config.js",
     "test": "mocha test test/spec/**/*.test.js",
     "restore": "DEBUG=wayback:* node test/restore"
   },
@@ -30,11 +30,14 @@
     "grunt-contrib-uglify": "^4.0.1",
     "grunt-contrib-watch": "^1.1.0",
     "load-grunt-tasks": "^5.1.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
   },
   "dependencies": {
     "async": "^2.6.1",
     "axios": "^0.18.1",
+    "cheerio": "^1.0.0-rc.3",
     "event-stream": "^3.3.2",
     "fs-extra": "^7.0.0",
     "parse-domain": "^0.2.1"

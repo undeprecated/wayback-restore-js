@@ -55,7 +55,7 @@ function restore( settings ) {
     if ( settings.url !== '' ) {
         const { domain, timestamp } = parse.parse( settings.url );
         settings.domain = domain;
-        settings.timestamp = timestamp
+        settings.timestamp = timestamp;
     } else if ( settings.domain !== '' && settings.timestamp !== '' ) {
         settings.url = `https://web.archive.org/web/${ settings.timestamp}/http://${ settings.domain }`;
     } else {

@@ -4,10 +4,9 @@
 "use string";
 
 var debug = require( "debug" )( "wayback:main" );
-var Wayback = require( "../" );
+var Wayback = require( "../dist/wayback-restore" );
 
 /*
-var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 
 var restore = Wayback.restore({
     directory: "test/restores/cashpropertysolutions.co.uk",
@@ -24,6 +23,9 @@ const domain = Wayback.parseDomain('http://web.archive.org/web/20150531/http://w
 const timestamp = Wayback.parseTimestamp('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
 const {domain, timestamp} = Wayback.parse('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
 */
+//var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
+console.log( Wayback );
+
 var restore = Wayback.restore( {
     directory: "test/restores/cashpropertysolutions.co.uk", url: "http://www.cashpropertysolutions.co.uk/",
     //domain: 'cashpropertysolutions.co.uk',
