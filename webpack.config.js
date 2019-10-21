@@ -8,7 +8,9 @@ module.exports = {
     },
     output: {
         path: path.resolve( __dirname, "./dist" ),
-        filename: "wayback-restore.js"
+        filename: "wayback-restore.js",
+        library: '',
+        libraryTarget: 'commonjs'
     },
     //externals: [ nodeExternals() ]
 };
