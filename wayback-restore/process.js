@@ -10,6 +10,7 @@ var util = require( 'util' );
 var EventEmitter = require( 'events' );
 var url = require( 'url' );
 var path = require( 'path' );
+var parseDomain = require( 'parse-domain' );
 
 // Third-Party Modules
 var fs = require( 'fs-extra' );
@@ -18,9 +19,9 @@ var fs = require( 'fs-extra' );
 var core = require( './core' );
 var help = require( './helpers' );
 var Asset = require( './asset' ).Asset;
-var convertLinkToKey = require( './asset' ).convertLinkToKey;
 var cdx = require( './cdx' );
 
+var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
 var ARCHIVE_SOURCE = core.ARCHIVE_SOURCE;
 
 var STATUS = core.RESTORE_STATUS;
@@ -305,6 +306,34 @@ function convertToPath( url ) {
     return dir + '/' + filename + suffix;
 }
 
+function convertLinkToKey( domain, link ) {
+    var key = help.makeRelative( link );
+
+    // @TODO - move this to constructor? doesn't need to be called every time
+    var re = new RegExp( ARCHIVE_TEMPLATE, "i" );
+
+    key = key.replace( re, '' );
+
+    re = new RegExp( '(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*' + domain + ')?)', 'gim' );
+    key = key.replace( re, '' );
+
+    // remove leading slashes
+    key = key.replace( /^\/+/i, '' );
+
+    // remove trailing slash
+    key = key.replace( /\/$/, '' );
+
+    var cdxkey = _keyLead( domain ) + '/' + key;
+    //debug('to cdx key: ' + cdxkey);
+    return cdxkey.toLowerCase();
+}
+
+function _keyLead( domain ) {
+    var pd = parseDomain( domain ),
+        tld = pd.tld.split( '.' ).reverse().join( ',' );
+    return tld + ',' + pd.domain + ')';
+}
+
 function filter( link ) {
     // filter links
     if ( !( /^javascript/i.test( link ) || /^mailto/i.test( link ) ||
@@ -315,4 +344,7 @@ function filter( link ) {
     return;
 }
 
-module.exports = Process;
+module.exports = {
+    Process: Process,
+    convertLinkToKey: convertLinkToKey
+};

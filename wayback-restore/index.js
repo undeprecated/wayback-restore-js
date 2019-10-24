@@ -25,6 +25,7 @@ module.exports = {
     VERSION: core.VERSION,
     restore: restore,
     cdx: cdx,
+    parse: parse.parse,
     parseDomain: parse.parseDomain,
     parseTimestamp: parse.parseTimestamp
 };

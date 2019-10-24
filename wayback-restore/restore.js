@@ -8,7 +8,9 @@ var debug = require( 'debug' )( 'wayback:restore' );
 
 // Local Modules
 var parse = require( './parse' );
-var Process = require( './process' );
+var {
+    Process
+} = require( './process' );
 
 /*
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');

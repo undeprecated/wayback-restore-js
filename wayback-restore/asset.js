@@ -5,10 +5,8 @@
  * A base class for creating different types of restoration objects to restore
  * based on the mime type.
  */
-
 var debug = require( 'debug' )( 'wayback:asset' );
 var request = require( 'request' );
-var parseDomain = require( 'parse-domain' );
 
 // Third Party Modules
 //var Promise = require("bluebird");
@@ -226,34 +224,6 @@ function convertMimeType( type ) {
     }
 }
 
-function convertLinkToKey( domain, link ) {
-    var key = helpers.makeRelative( link );
-
-    // @TODO - move this to constructor? doesn't need to be called every time
-    var re = new RegExp( ARCHIVE_TEMPLATE, "i" );
-
-    key = key.replace( re, '' );
-
-    re = new RegExp( '(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*' + domain + ')?)', 'gim' );
-    key = key.replace( re, '' );
-
-    // remove leading slashes
-    key = key.replace( /^\/+/i, '' );
-
-    // remove trailing slash
-    key = key.replace( /\/$/, '' );
-
-    var cdxkey = _keyLead( domain ) + '/' + key;
-    //debug('to cdx key: ' + cdxkey);
-    return cdxkey.toLowerCase();
-}
-
-function _keyLead( domain ) {
-    var pd = parseDomain( domain ),
-        tld = pd.tld.split( '.' ).reverse().join( ',' );
-    return tld + ',' + pd.domain + ')';
-}
-
 /**
  * Remove extraneous code from the restored content and cleanup links.
  */
@@ -267,6 +237,5 @@ function contentCleanup( content, domain ) {
 }
 
 module.exports = {
-    convertLinkToKey: convertLinkToKey,
     Asset: Asset
 };

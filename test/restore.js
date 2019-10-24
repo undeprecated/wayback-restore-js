@@ -3,8 +3,9 @@
 
 "use string";
 
-var debug = require( "debug" )( "wayback:main" );
-var Wayback = require( "../dist/wayback-restore" );
+var debug = require("debug")("wayback:main");
+//var Wayback = require( "../dist/wayback-restore" );
+var Wayback = require("../wayback-restore");
 
 /*
 
@@ -24,24 +25,24 @@ const timestamp = Wayback.parseTimestamp('http://web.archive.org/web/20150531/ht
 const {domain, timestamp} = Wayback.parse('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk')
 */
 //var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
-console.log( Wayback );
+console.log(Wayback);
 
-var restore = Wayback.restore( {
-    directory: "test/restores/cashpropertysolutions.co.uk", url: "http://www.cashpropertysolutions.co.uk/",
-    //domain: 'cashpropertysolutions.co.uk',
+var restore = Wayback.restore({
+    directory: "test/restores/cashpropertysolutions.co.uk",
+    domain: "cashpropertysolutions.co.uk",
     timestamp: "20150531",
     links: true,
     log: true
-} );
+});
 restore.start();
 /*restore.onCompleted( function ( results ) {
     console.log( results );
 } );*/
-restore.on( "completed", function () {
-    console.log( "restorationg has completed" );
+restore.on("completed", function() {
+    console.log("restorationg has completed");
     //console.log(this);
     //console.log(this.getLog());
-} );
+});
 /*
     .on('start', function() {
         console.log('[STARTED USING]:', this.settings);
