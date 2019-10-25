@@ -47,6 +47,8 @@ function Process( settings ) {
     };
 
     this.results = {
+        start_dt: '',
+        end_dt: '',
         restored_count: 0,
         failed_count: 0
     };
@@ -57,6 +59,7 @@ util.inherits( Process, EventEmitter );
 Process.prototype.onCompleted = function ( results ) {};
 
 Process.prototype.start = async function () {
+    this.results.start_dt = Date.now();
     this.emit( EVENT.STARTED );
 
     await this.createOutputDirectory( this.settings.directory );
@@ -178,7 +181,7 @@ Process.prototype.restore = async function ( urls ) {
 Process.prototype.complete = function () {
     var me = this;
 
-    me.end_dt = Date.now();
+    me.results.end_dt = Date.now();
 
     if ( me.settings.log ) {
         me.saveToFile( me.settings.logFile, JSON.stringify( me.getLogData(), null, 2 ) );
