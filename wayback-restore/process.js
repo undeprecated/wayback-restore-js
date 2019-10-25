@@ -181,7 +181,7 @@ Process.prototype.complete = function () {
     me.end_dt = Date.now();
 
     if ( me.settings.log ) {
-        me.saveToFile( me.settings.logDir + '/' + me.settings.logFile, JSON.stringify( me.getLogData(), null, 2 ) );
+        me.saveToFile( me.settings.logFile, JSON.stringify( me.getLogData(), null, 2 ) );
     }
 
     me.emit( 'completed', me.results );

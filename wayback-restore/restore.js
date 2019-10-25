@@ -42,7 +42,6 @@ function restore( settings ) {
         directory: 'restore', // base directory
         websiteDirectory: 'website', // directory for restored content
         log: false,
-        logDir: 'logs', // directory for log files,
         logFile: 'restore.log'
     }
 
