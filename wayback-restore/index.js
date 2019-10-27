@@ -13,7 +13,8 @@
 @TODO implement pausing a restore
 @TODO implement resuming a restore
 @TODO implement stopping a restore
-@TODO create report
+@TODO write each restored asset to log file on restore instead of at all at end
+@TODO add CLI support
 */
 
 var restore = require( './restore' );

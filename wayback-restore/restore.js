@@ -40,9 +40,9 @@ function restore( settings ) {
         links: false, // restore links
         assets: true, // restore assets
         directory: 'restore', // base directory
-        websiteDirectory: 'website', // directory for restored content
+        websiteDirectory: 'files', // directory for restored content
         log: false,
-        logFile: 'restore.log'
+        logFile: 'restore.wbmr'
     }
 
     if ( typeof settings === 'string' ) {

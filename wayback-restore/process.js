@@ -47,6 +47,9 @@ function Process( settings ) {
     };
 
     this.results = {
+        url: this.settings.url,
+        domain: this.settings.domain,
+        timestamp: this.settings.timestamp,
         start_dt: '',
         end_dt: '',
         restored_count: 0,
