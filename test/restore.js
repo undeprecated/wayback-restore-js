@@ -4,8 +4,8 @@
 "use string";
 
 var debug = require( "debug" )( "wayback:main" );
-var Wayback = require( "../dist/wayback-restore" );
-//var Wayback = require("../wayback-restore");
+//var Wayback = require( "../dist/wayback-restore" );
+var Wayback = require( "../wayback-restore" );
 
 /*
 var restore = Wayback.restore({

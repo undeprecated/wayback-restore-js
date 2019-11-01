@@ -50,6 +50,7 @@ function Process( settings ) {
         url: this.settings.url,
         domain: this.settings.domain,
         timestamp: this.settings.timestamp,
+        directory: this.settings.directory,
         start_dt: '',
         end_dt: '',
         restored_count: 0,
@@ -211,6 +212,7 @@ Process.prototype.setRestoring = function ( asset ) {
 Process.prototype.setRestored = function ( asset ) {
     asset.setRestored();
     this.db.restored[ asset.key ] = STATUS.RESTORED;
+    this.results.restored_count++;
     this.emit( STATUS.RESTORED, asset );
     return asset;
 };
@@ -220,6 +222,7 @@ Process.prototype.restoreFailed = function ( error, asset ) {
     //debug('snapshot', asset.getSnapshot());
     debug( error );
     asset.setFailed();
+    this.results.failed_count++;
     this.db.restored[ asset.key ] = STATUS.FAILD;
     this.emit( STATUS.FAILED, asset );
 };

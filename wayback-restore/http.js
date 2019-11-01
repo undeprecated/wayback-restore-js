@@ -6,13 +6,13 @@
  * based on the mime type.
  */
 
-var debug = require('debug')('wayback:http');
+var debug = require( 'debug' )( 'wayback:http' );
 
 //var http = require('http');
-var https = require('https');
-var axios = require("axios");
+var https = require( 'https' );
+var axios = require( "axios" );
 
-var session = axios.create({
+var session = axios.create( {
     //60 sec timeout
     //timeout: 60000,
 
@@ -22,38 +22,35 @@ var session = axios.create({
         keepAlive: true
         //maxFreeSockets:
     }),*/
-    httpsAgent: new https.Agent({
-        maxSockets: 5,
-        keepAlive: true
+    httpsAgent: new https.Agent( {
+        maxSockets: 5, keepAlive: true
         //maxFreeSockets
-    }),
+    } ),
 
     //follow up to 10 HTTP 3xx redirects
     maxRedirects: 10,
 
     //cap the maximum content length we'll accept to 50MBs, just in case
     //maxContentLength: 50 * 1000 * 1000
-});
+} );
 
-async function get(url, options) {
-    return session
-        .get(url, {
-            responseType: 'arraybuffer'
-        })
-        .then(function(response) {
-            return response.data;
-        })
-        .catch(function(err) {
-            debug(err);
-            return err;
-        });
+async function get( url, options ) {
+    //const response = await session.get( url, { responseType: 'arraybuffer' } );
+    //return response.data;
+
+    return session.get( url, { responseType: 'arraybuffer' } ).then( function ( response ) {
+        return response.data;
+    } ).catch( function ( err ) {
+        debug( err );
+        return err;
+    } );
 }
 
 module.exports = {
     session: session,
     get: get,
-    close: function() {
-        if (session.httpsAgent) {
+    close: function () {
+        if ( session.httpsAgent ) {
             session.httpsAgent.destroy();
         }
     }

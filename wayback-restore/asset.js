@@ -113,8 +113,8 @@ Asset.prototype.fetch = async function ( raw ) {
 
         if ( me.contentType() === 'text' || me.contentType() === 'css' || me.contentType() === 'script' ) {
 
-            //me.content = Buffer.from(new Uint8Array(me.content));
-            me.content = me.content.toString( 'utf8' );
+            me.content = Buffer.from( new Uint8Array( me.content ) );
+            //me.content = me.content.toString( 'utf8' );
 
             try {
                 var $ = cheerio.load( me.content );

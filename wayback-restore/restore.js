@@ -37,7 +37,7 @@ function restore( settings ) {
         timestamp: '',
         url: '',
         domain: '',
-        links: false, // restore links
+        links: true, // restore links
         assets: true, // restore assets
         directory: 'restore', // base directory
         websiteDirectory: 'files', // directory for restored content
