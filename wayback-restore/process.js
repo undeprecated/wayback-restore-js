@@ -51,6 +51,7 @@ function Process( settings ) {
         domain: this.settings.domain,
         timestamp: this.settings.timestamp,
         directory: this.settings.directory,
+        websiteDirectory: this.settings.websiteDirectory,
         start_dt: '',
         end_dt: '',
         restored_count: 0,
@@ -64,6 +65,7 @@ Process.prototype.onCompleted = function ( results ) {};
 
 Process.prototype.start = async function () {
     this.results.start_dt = Date.now();
+
     this.emit( EVENT.STARTED );
 
     await this.createOutputDirectory( this.settings.directory );
@@ -104,24 +106,6 @@ Process.prototype.fetchCdx = function ( options, callback ) {
 
             me.db.cdx.set( asset.key, asset );
         } ) );
-    } );
-};
-
-Process.prototype.findAssetByUrl = async function ( url ) {
-    var self = this;
-    return await self.findAssetByKey( convertLinkToKey( self.settings.domain, url ) );
-};
-
-Process.prototype.findAssetByKey = async function ( key ) {
-    var self = this;
-    return new Promise( function ( resolve, reject ) {
-        var asset = self.db.cdx.get( key );
-
-        if ( asset ) {
-            resolve( asset );
-        } else {
-            reject( `asset does not exist for key [${ key }]` );
-        }
     } );
 };
 
@@ -177,6 +161,24 @@ Process.prototype.restore = async function ( urls ) {
             debug( err );
         }
     }
+};
+
+Process.prototype.findAssetByUrl = async function ( url ) {
+    var self = this;
+    return await self.findAssetByKey( convertLinkToKey( self.settings.domain, url ) );
+};
+
+Process.prototype.findAssetByKey = async function ( key ) {
+    var self = this;
+    return new Promise( function ( resolve, reject ) {
+        var asset = self.db.cdx.get( key );
+
+        if ( asset ) {
+            resolve( asset );
+        } else {
+            reject( `asset does not exist for key [${ key }]` );
+        }
+    } );
 };
 
 /**
