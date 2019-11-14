@@ -40,7 +40,6 @@ function restore( settings ) {
         links: true, // restore links
         assets: true, // restore assets
         directory: 'restore', // base directory
-        websiteDirectory: 'files', // directory for restored content
         log: false,
         logFile: 'restore.wbmr'
     }
