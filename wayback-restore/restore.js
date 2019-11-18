@@ -2,13 +2,15 @@
 /*global define, require, module */
 
 // Core Modules
-var debug = require("debug")("wayback:restore");
+var debug = require( "debug" )( "wayback:restore" );
 
 // Third Party Modules
 
 // Local Modules
-var parse = require("./parse");
-var { Process } = require("./process");
+var parse = require( "./parse" );
+var {
+    Process
+} = require( "./process" );
 
 /*
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
@@ -30,7 +32,7 @@ var restore = Wayback.restore({
  * @param  {[type]} url  An archive url to restore.
  * @return {[type]}      [description]
  */
-function restore(settings) {
+function restore( settings ) {
     const defaults = {
         timestamp: "",
         url: "",
@@ -39,30 +41,30 @@ function restore(settings) {
         assets: true, // restore assets
         directory: "restore", // base directory
         log: false,
-        logFile: "restore.wbmr"
+        logFile: "restore.log",
+        resultsFile: 'results.wbmr'
     };
 
-    if (typeof settings === "string") {
+    if ( typeof settings === "string" ) {
         let url = settings;
         settings = {};
         settings.url = url;
     }
 
-    settings = Object.assign(defaults, settings);
+    settings = Object.assign( defaults, settings );
 
-    if (settings.url !== "") {
-        const { domain, timestamp } = parse.parse(settings.url);
+    if ( settings.url !== "" ) {
+        const { domain, timestamp } = parse.parse( settings.url );
         settings.domain = domain;
         settings.timestamp = timestamp;
-    } else if (settings.domain !== "" && settings.timestamp !== "") {
+    } else if ( settings.domain !== "" && settings.timestamp !== "" ) {
         settings.url = `https://web.archive.org/web/${
-            settings.timestamp
-        }/http://${settings.domain}`;
+        settings.timestamp}/http://${ settings.domain }`;
     } else {
         throw "Invalid settings";
     }
 
-    return new Process(settings);
+    return new Process( settings );
 }
 
 /*

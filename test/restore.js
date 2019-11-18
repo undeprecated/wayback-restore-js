@@ -21,17 +21,17 @@ var restore = Wayback.restore({
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 */
 
-var restore = Wayback.restore( { directory: "~/testrestore/restores/cashpropertysolutions.co.uk", domain: "cashpropertysolutions.co.uk", timestamp: "20150531", links: true, log: true } );
+var restore = Wayback.restore( { directory: "~/testrestore/restores/", domain: "cashpropertysolutions.co.uk", timestamp: "20150531", links: true, log: true } );
 restore.start();
-restore.on( "completed", function( results ) {
-  console.log( "restorationg has completed" );
-  console.log( "url: ", results.url );
-  console.log( "url: ", results.directory );
-  console.log( "first file: ", results.first_file );
-  console.log( 'started: ', results.start_dt );
-  console.log( 'ended: ', results.end_dt );
-  console.log( 'restored: ', results.restored_count );
-  console.log( 'failed: ', results.failed_count );
+restore.on( "completed", function ( results ) {
+    console.log( "restorationg has completed" );
+    console.log( "url: ", results.url );
+    console.log( "directory: ", results.directory );
+    console.log( "first file: ", results.first_file );
+    console.log( 'started: ', results.start_dt );
+    console.log( 'ended: ', results.end_dt );
+    console.log( 'restored: ', results.restored_count );
+    console.log( 'failed: ', results.failed_count );
 } );
 /*
     .on('start', function() {
