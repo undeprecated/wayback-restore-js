@@ -21,7 +21,13 @@ var restore = Wayback.restore({
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 */
 
-var restore = Wayback.restore( { directory: "~/testrestore/restores/", domain: "cashpropertysolutions.co.uk", timestamp: "20150531", links: true, log: true } );
+var restore = Wayback.restore( {
+    directory: "~/testrestore/restores/", url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
+    //domain: "cashpropertysolutions.co.uk",
+    //timestamp: "20150531",
+    links: true,
+    log: true
+} );
 restore.start();
 restore.on( "completed", function ( results ) {
     console.log( "restorationg has completed" );

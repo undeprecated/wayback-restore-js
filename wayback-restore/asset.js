@@ -97,6 +97,7 @@ Asset.prototype.setRestoring = function() {
  */
 Asset.prototype.fetch = async function(raw) {
     var me = this;
+    var flag = false;
 
     var url = me.getSnapshot(raw);
 
@@ -114,22 +115,32 @@ Asset.prototype.fetch = async function(raw) {
             me.contentType() === "script"
         ) {
             me.content = Buffer.from(new Uint8Array(me.content));
-            //me.content = me.content.toString( 'utf8' );
+            //me.content = me.content.toString("utf8");
 
             try {
                 var $ = cheerio.load(me.content);
-                me.content = $.html();
+                if (me.contentType() === "text") {
+                    me.content = $.html();
+                }
+                if (
+                    me.contentType() === "css" ||
+                    me.contentType() === "script"
+                ) {
+                    me.content = $.text();
+                }
                 me.links = me.extractLinks($);
                 me.assets = me.extractAssets($);
-                // reloads content that might have been rewritten
-                //me.content = $.html();
+                //me.content = $.text();
                 me.content = contentCleanup(me.content, me.domain);
+
+                flag = true;
             } catch (err) {
                 debug(err);
             }
         }
 
-        return me.content;
+        //return me.content;
+        return flag;
     } catch (err) {
         debug(err);
     }
