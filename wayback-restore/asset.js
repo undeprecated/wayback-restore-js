@@ -128,9 +128,9 @@ Asset.prototype.fetch = async function(raw) {
                 ) {
                     me.content = $.text();
                 }
+
                 me.links = me.extractLinks($);
                 me.assets = me.extractAssets($);
-                //me.content = $.text();
                 me.content = contentCleanup(me.content, me.domain);
 
                 flag = true;
