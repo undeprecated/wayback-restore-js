@@ -151,7 +151,7 @@ Process.prototype.restore = async function(urls) {
                         if (result) {
                             asset.content = asset.content.replace(
                                 this.root_linksre,
-                                "./"
+                                ""
                             );
                         }
 
