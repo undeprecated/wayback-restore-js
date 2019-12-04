@@ -1,7 +1,7 @@
-var debug = require("debug")("wayback:parse");
+var debug = require( "debug" )( "wayback:parse" );
 
-var mod_url = require("url");
-var parse_domain = require("parse-domain");
+var mod_url = require( "url" );
+var parse_domain = require( "parse-domain" );
 
 const Wayback = {
     /**
@@ -11,50 +11,49 @@ const Wayback = {
      * @return {Object}     timestamp, domain
      */
     parse: from_url => {
-        return {
-            timestamp: Wayback.parseTimestamp(from_url),
-            domain: Wayback.parseDomain(from_url)
-        };
+        return { timestamp: Wayback.parseTimestamp( from_url ), domain: Wayback.parseDomain( from_url ) };
     },
     parseTimestamp: from_url => {
         let x = from_url;
-        x = Wayback.strip(x);
-        let [timestamp, web] = x.split("/", 1);
+        x = Wayback.strip( x );
+        let [timestamp, web] = x.split( "/", 1 );
 
         return timestamp;
     },
     parseDomain: from_url => {
         let x = from_url;
-        x = Wayback.strip(x);
-        let [timestamp, web] = x.split("/", 1);
-        web = x.replace(timestamp, "").replace("/", "");
+        x = Wayback.strip( x );
+        let [timestamp, web] = x.split( "/", 1 );
+        web = x.replace( timestamp, "" ).replace( "/", "" );
 
-        var myURL = mod_url.parse(web);
-        var link = parse_domain(myURL.hostname);
+        var myURL = mod_url.parse( web );
+        var link = parse_domain( myURL.hostname );
 
-        if (link) {
+        if ( link ) {
             return link.domain + "." + link.tld;
         } else {
-            debug("Could not extract an archived link");
+            debug( "Could not extract an archived link" );
             return;
         }
     },
     strip: url => {
         let x = url;
-        x = x.replace("http://web.archive.org/web/", "");
-        x = x.replace("https://web.archive.org/web/", "");
+        x = x.replace( "http://web.archive.org/web/", "" );
+        x = x.replace( "https://web.archive.org/web/", "" );
         return x;
+    },
+    isRestoreUrl: url => {
+        if ( typeof url !== 'string' ) {
+            return false;
+        }
+
+        return /^http(s)?:\/\/web\.archive\.org\/web\/[0-9]+\//.test( url );
     }
 };
 
 module.exports = {
-    parse: function(url) {
-        return Wayback.parse(url);
-    },
-    parseDomain: function(url) {
-        return Wayback.parseDomain(url);
-    },
-    parseTimestamp: function(url) {
-        return Wayback.parseTimestamp(url);
-    }
+    parse: Wayback.parse,
+    parseDomain: Wayback.parseDomain,
+    parseTimestamp: Wayback.parseTimestamp,
+    isRestoreUrl: Wayback.isRestoreUrl
 };
