@@ -3,9 +3,9 @@
 
 "use string";
 
-var debug = require( "debug" )( "wayback:main" );
+var debug = require("debug")("wayback:main");
 //var Wayback = require( "../dist/wayback-restore" );
-var Wayback = require( "../wayback-restore" );
+var Wayback = require("../wayback-restore");
 
 /*
 var restore = Wayback.restore({
@@ -21,24 +21,33 @@ var restore = Wayback.restore({
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 */
 
-var restore = Wayback.restore( {
-    directory: "~/testrestore/restores/", url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
-    //domain: "cashpropertysolutions.co.uk",
-    //timestamp: "20150531",
-    links: true,
-    log: true
-} );
-restore.start();
-restore.on( "completed", function ( results ) {
-    console.log( "restorationg has completed" );
-    console.log( "url: ", results.url );
-    console.log( "directory: ", results.directory );
-    console.log( "first file: ", results.first_file );
-    console.log( 'started: ', results.start_dt );
-    console.log( 'ended: ', results.end_dt );
-    console.log( 'restored: ', results.restored_count );
-    console.log( 'failed: ', results.failed_count );
-} );
+var restore = Wayback.restore({
+  directory: "~/testrestore/restores/",
+  //url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
+  //url: 'https://web.archive.org/web/20170204050649/http://www.androidfantasy.com/',
+  url: "https://web.archive.org/web/20150801040409/http://acbaw.com/",
+  //domain: "acbaw.com",
+  //timestamp: "20150801040409",
+  links: false,
+  log: true
+});
+restore
+  .on("completed", function(results) {
+    console.log("restorationg has completed");
+    console.log("url: ", results.url);
+    console.log("domain: ", results.domain);
+    console.log("timestamp: ", results.timestamp);
+    console.log("directory: ", results.directory);
+    console.log("first file: ", results.first_file);
+    console.log("started: ", results.start_dt);
+    console.log("ended: ", results.end_dt);
+    console.log("restored: ", results.restored_count);
+    console.log("failed: ", results.failed_count);
+  })
+  .on("restored", function(asset) {
+    console.log("[RESTORED]", asset.original_url);
+  })
+  .start();
 /*
     .on('start', function() {
         console.log('[STARTED USING]:', this.settings);
