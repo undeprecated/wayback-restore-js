@@ -2,15 +2,13 @@
 /*global define, require, module */
 
 // Core Modules
-var debug = require( "debug" )( "wayback:restore" );
+var debug = require("debug")("wayback:restore");
 
 // Third Party Modules
 
 // Local Modules
-var parse = require( "./parse" );
-var {
-    Process
-} = require( "./process" );
+var parse = require("./parse");
+var { Process } = require("./process");
 
 /*
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
@@ -32,39 +30,42 @@ var restore = Wayback.restore({
  * @param  {[type]} url  An archive url to restore.
  * @return {[type]}      [description]
  */
-function restore( settings ) {
-    const defaults = {
-        timestamp: "",
-        url: "",
-        domain: "",
-        links: true, // restore links
-        assets: true, // restore assets
-        directory: "restore", // base directory
-        log: false,
-        logFile: "restore.log",
-        resultsFile: 'results.wbmr'
-    };
+function restore(settings) {
+  const defaults = {
+    timestamp: "",
+    url: "",
+    domain: "",
+    directory: "restore", // base directory
 
-    if ( typeof settings === "string" ) {
-        let url = settings;
-        settings = {};
-        settings.url = url;
-    }
+    // @TODO implement max number of pages to restore
+    // max_pages: null, (unlimited)
 
-    settings = Object.assign( defaults, settings );
+    links: true, // restore links
+    assets: true, // restore assets
+    log: false,
+    logFile: "restore.log",
+    resultsFile: "results.wbmr"
+  };
 
-    if ( settings.url !== "" ) {
-        const { domain, timestamp } = parse.parse( settings.url );
-        settings.domain = domain;
-        settings.timestamp = timestamp;
-    } else if ( settings.domain !== "" && settings.timestamp !== "" ) {
-        settings.url = `https://web.archive.org/web/${
-        settings.timestamp}/http://${ settings.domain }`;
-    } else {
-        throw "Invalid settings";
-    }
+  if (typeof settings === "string") {
+    let url = settings;
+    settings = {};
+    settings.url = url;
+  }
 
-    return new Process( settings );
+  settings = Object.assign(defaults, settings);
+
+  if (settings.url !== "") {
+    const { domain, timestamp } = parse.parse(settings.url);
+    settings.domain = domain;
+    settings.timestamp = timestamp;
+  } else if (settings.domain !== "" && settings.timestamp !== "") {
+    settings.url = `https://web.archive.org/web/${settings.timestamp}/http://${settings.domain}`;
+  } else {
+    throw "Invalid settings";
+  }
+
+  return new Process(settings);
 }
 
 /*

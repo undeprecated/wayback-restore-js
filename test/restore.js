@@ -25,10 +25,14 @@ var restore = Wayback.restore({
   directory: "~/testrestore/restores/",
   //url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
   //url: 'https://web.archive.org/web/20170204050649/http://www.androidfantasy.com/',
-  url: "https://web.archive.org/web/20150801040409/http://acbaw.com/",
+  //url: "https://web.archive.org/web/20150801040409/http://acbaw.com/",
+  //url: "http://web.archive.org/web/20091125054126/http://www.ulcinjtoday.com/",
+  //url: "https://web.archive.org/web/20190114224925/http://www.tennisballmachinereviews.org/",
+  //url: "https://web.archive.org/web/20200602050304/https://www.fancytextguru.com/",
+  url: "https://web.archive.org/web/20190424225217/http://remont-k.com/",
   //domain: "acbaw.com",
   //timestamp: "20150801040409",
-  links: false,
+  links: true,
   log: true
 });
 restore
