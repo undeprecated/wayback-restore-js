@@ -6,10 +6,6 @@
  * based on the mime type.
  */
 var debug = require("debug")("wayback:asset");
-var request = require("request");
-
-// Third Party Modules
-//var Promise = require("bluebird");
 
 // Local Modules
 var core = require("./core");
@@ -20,12 +16,6 @@ var cheerio = require("cheerio");
 
 var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
 var RESTORE_STATUS = core.RESTORE_STATUS;
-
-/*
-Promise.promisifyAll(require("request"), {
-    multiArgs: true
-});
-*/
 
 function Asset() {
     this.key = null;
