@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --config ./webpack.config.js",
     "test": "mocha test test/spec/**/*.test.js",
-    "restore": "DEBUG=wayback:* node test/restore"
+    "restore": "DEBUG=wayback:* node restore"
   },
   "author": "Nick Curry",
   "license": "Unlicense",

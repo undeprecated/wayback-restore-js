@@ -1,5 +1,5 @@
 var setup = require("../setup");
-var parse = require("../../wayback-restore");
+var parse = require("../../wayback-restore/parse");
 
 var expect = setup.expect;
 
@@ -11,6 +11,22 @@ describe("parse.js", function() {
                     "http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk"
                 )
             ).to.equal("cashpropertysolutions.co.uk");
+        });
+
+        it("can parse domain without http", function() {
+            expect(
+                parse.parseDomain(
+                    "http://web.archive.org/web/20150531/example.com"
+                )
+            ).to.equal("example.com");
+        });
+
+        it("can parse domain without http with subdomain", function() {
+            expect(
+                parse.parseDomain(
+                    "http://web.archive.org/web/20150531/www.example.com"
+                )
+            ).to.equal("example.com");
         });
     });
 
