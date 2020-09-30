@@ -1,7 +1,7 @@
 {
   "name": "wayback-restore",
   "version": "1.0.0",
-  "description": "Website restoration tool written for node js.",
+  "description": "Website restoration tool written for Node Js.",
   "main": "wayback-restore/index.js",
   "scripts": {
     "build": "webpack --config ./webpack.config.js",
