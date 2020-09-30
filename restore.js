@@ -50,13 +50,19 @@ restore
     console.log("timestamp: ", results.timestamp);
     console.log("directory: ", results.directory);
     console.log("first file: ", results.first_file);
-    console.log("started: ", results.start_dt);
-    console.log("ended: ", results.end_dt);
+    console.log("started: ", results.started);
+    console.log("ended: ", results.ended);
+    console.log(
+      "minutes:",
+      Math.round(
+        ((results.ended - (results.started % 86400000)) % 3600000) / 60000
+      )
+    );
     console.log("restored: ", results.restored_count);
     console.log("failed: ", results.failed_count);
   })
   .on("restored", function(asset) {
-    console.log("[RESTORED]", asset.original_url);
+    //console.log("[RESTORED]", asset.original_url);
   })
   .start();
 /*
