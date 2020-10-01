@@ -9,6 +9,7 @@ var EventEmitter = require("events");
 var url = require("url");
 var path = require("path");
 var parseDomain = require("parse-domain");
+var async = require("async");
 
 // Third-Party Modules
 var fs = require("fs-extra");
@@ -48,13 +49,14 @@ function Process(settings) {
    * Base directory where a restore directory will be output.
    */
   this.settings.directory = help.resolveHome(this.settings.directory);
-  this.settings.directory = path.normalize(
+  /*this.settings.directory = path.normalize(
     this.settings.directory + "/" + this.settings.domain
-  );
+);*/
 
   /**
    * Directory where assets are saved.
    */
+
   this.restore_directory = path.join(
     this.settings.directory,
     this.settings.domain
@@ -91,6 +93,7 @@ util.inherits(Process, EventEmitter);
 Process.prototype.onCompleted = function(results) {};
 
 Process.prototype.start = async function() {
+  let me = this;
   this.results.started = Date.now();
 
   this.emit(EVENT.STARTED);
@@ -105,12 +108,36 @@ Process.prototype.start = async function() {
     //output: 'json'
   });
 
-  await this.restore(this.settings.url);
+  console.log("Found " + this.db.cdx.size + " to restore.");
+
+  var q = async.queue(async (asset, callback) => {
+    //console.log("asset ", asset);
+    await me.restore(asset);
+    callback();
+  }, 2);
+  //var q = async.queue(this.restore, 20);
+
+  let restores = [];
+  this.db.cdx.forEach((asset, keys) => {
+    q.push(asset);
+    restores.push(this.restore(asset));
+  });
+
+  console.log("# of restore ", restores.length);
+  try {
+    await async.parallelLimit(restores, 1, this.complete);
+  } catch (e) {
+    console.log(e);
+  }
+
+  //this.complete();
+
+  /*await this.restore(this.settings.url);
 
   if (this.process_stopped) {
   } else {
     this.complete();
-  }
+}*/
 };
 
 Process.prototype.stop = function() {
@@ -140,7 +167,7 @@ Process.prototype.fetchCdx = function(options, callback) {
           asset.original_url = record.original;
           asset.timestamp = record.timestamp;
           asset.mimetype = record.mimetype;
-          asset.domain = me.settings.domain;
+          //asset.domain = me.settings.domain;
           //asset.type = asset.setTypeFromMimeType(record.mimetype);
 
           me.db.cdx.set(asset.key, asset);
@@ -149,7 +176,35 @@ Process.prototype.fetchCdx = function(options, callback) {
   });
 };
 
-Process.prototype.restore = async function(urls) {
+Process.prototype.restore = async function(asset) {
+  var me = this;
+
+  try {
+    me.setRestoring(asset);
+
+    var result = await asset.fetch(true);
+
+    if (result) {
+      asset.content = asset.content.replace(this.root_linksre, "");
+    }
+
+    //debug("save asset", asset.original_url);
+    await me.saveAsset(asset);
+
+    asset.clear();
+
+    debug("restored", asset.original_url);
+    me.setRestored(asset);
+
+    if (me.results.first_file === "") {
+      me.results.first_file = asset.filename;
+    }
+  } catch (error) {
+    me.restoreFailed(error, asset);
+  }
+};
+
+Process.prototype.restore2 = async function(urls) {
   var me = this;
   var i;
 
@@ -285,15 +340,15 @@ Process.prototype.saveAsset = async function(asset) {
 };
 
 Process.prototype.setRestoring = function(asset) {
-  asset.setRestoring();
-  this.db.restored[asset.key] = RESTORE_STATUS.RESTORING;
+  //asset.setRestoring();
+  //this.db.restored[asset.key] = RESTORE_STATUS.RESTORING;
   this.emit(RESTORE_STATUS.RESTORING, asset);
   return asset;
 };
 
 Process.prototype.setRestored = function(asset) {
-  asset.setRestored();
-  this.db.restored[asset.key] = RESTORE_STATUS.RESTORED;
+  //asset.setRestored();
+  //this.db.restored[asset.key] = RESTORE_STATUS.RESTORED;
   this.results.restored_count++;
   this.emit(RESTORE_STATUS.RESTORED, asset);
   return asset;

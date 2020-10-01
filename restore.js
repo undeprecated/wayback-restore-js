@@ -61,8 +61,11 @@ restore
     console.log("restored: ", results.restored_count);
     console.log("failed: ", results.failed_count);
   })
+  .on("restoring", function(asset) {
+    console.log("[RESTORING]", asset.original_url);
+  })
   .on("restored", function(asset) {
-    //console.log("[RESTORED]", asset.original_url);
+    console.log("[RESTORED]", asset.original_url);
   })
   .start();
 /*
