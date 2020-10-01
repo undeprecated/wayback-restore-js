@@ -22,58 +22,58 @@ var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.ca
 */
 
 var restore = Wayback.restore({
-  directory: "~/testrestore/restores/",
-  //url:"https://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk",
-  //url: 'https://web.archive.org/web/20170204050649/http://www.androidfantasy.com/',
-  //url: "https://web.archive.org/web/20150801040409/http://acbaw.com/",
-  //url: "http://web.archive.org/web/20091125054126/http://www.ulcinjtoday.com/",
-  //url: "https://web.archive.org/web/20190114224925/http://www.tennisballmachinereviews.org/",
-  //url: "https://web.archive.org/web/20200602050304/https://www.fancytextguru.com/",
-  //url: "https://web.archive.org/web/20190424225217/http://remont-k.com/",
-  url: "https://web.archive.org/web/20181029143918/https://trufish.org/",
-  /**
+    directory: "~/testrestore/restores/",
+    //url:"https://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk",
+    //url: 'https://web.archive.org/web/20170204050649/http://www.androidfantasy.com/',
+    //url: "https://web.archive.org/web/20150801040409/http://acbaw.com/",
+    //url: "http://web.archive.org/web/20091125054126/http://www.ulcinjtoday.com/",
+    //url: "https://web.archive.org/web/20190114224925/http://www.tennisballmachinereviews.org/",
+    //url: "https://web.archive.org/web/20200602050304/https://www.fancytextguru.com/",
+    //url: "https://web.archive.org/web/20190424225217/http://remont-k.com/",
+    url: "https://web.archive.org/web/20181029143918/https://trufish.org/",
+    /**
      * This is not a valid URL and does not restore
      * @type {String}
      *
     url: "https://web.archive.org/web/20181029143918/trufish.org",
     */
-  //domain: "acbaw.com",
-  //timestamp: "20150801040409",
+    //domain: "acbaw.com",
+    //timestamp: "20150801040409",
 
-  //domain: "trufish.org",
-  //from: "20150801040409",
-  //to: "20150801040409",
+    //domain: "trufish.org",
+    //from: "20150801040409",
+    //to: "20150801040409",
 
-  concurrency: 1,
-  links: true
+    concurrency: 10,
+    links: true
 });
 restore
-  .on("completed", function(results) {
-    console.log("restoration has completed");
-    console.log("url: ", results.url);
-    console.log("domain: ", results.domain);
-    console.log("timestamp: ", results.timestamp);
-    console.log("directory: ", results.directory);
-    //console.log("first file: ", results.first_file);
-    //console.log("started: ", results.started);
-    //console.log("ended: ", results.ended);
-    console.log("restored: ", results.restored_count);
-    console.log("failed: ", results.failed_count);
-    console.log("Runtime:", msToTime(results.ended - results.started));
-  })
-  .on("restoring", function(asset) {
-    console.log("[RESTORING]", asset.original_url);
-  })
-  .on("restored", function(asset) {
-    console.log("[RESTORED]", asset.original_url);
-  })
-  .on("start", function() {
-    console.log("[STARTED USING]:", this.settings);
-  })
-  .on("cdxquery", function(cdx) {
-    console.log("Snapshots Found: ", cdx.size);
-  })
-  .start();
+    .on("completed", function(results) {
+        console.log("restoration has completed");
+        console.log("url: ", results.url);
+        console.log("domain: ", results.domain);
+        console.log("timestamp: ", results.timestamp);
+        console.log("directory: ", results.directory);
+        //console.log("first file: ", results.first_file);
+        //console.log("started: ", results.started);
+        //console.log("ended: ", results.ended);
+        console.log("restored: ", results.restored_count);
+        console.log("failed: ", results.failed_count);
+        console.log("Runtime:", results.runtime_hms);
+    })
+    .on("restoring", function(asset) {
+        console.log("[RESTORING]", asset.original_url);
+    })
+    .on("restored", function(asset) {
+        console.log("[RESTORED]", asset.original_url);
+    })
+    .on("start", function() {
+        console.log("[STARTED USING]:", this.settings);
+    })
+    .on("cdxquery", function(cdx) {
+        console.log("Snapshots Found: ", cdx.size);
+    })
+    .start();
 /*
 
 
@@ -89,16 +89,3 @@ restore
     .on('completed', function() {
         console.log('[COMPLETED]');
     })*/
-
-function msToTime(duration) {
-  var milliseconds = parseInt((duration % 1000) / 100),
-    seconds = Math.floor((duration / 1000) % 60),
-    minutes = Math.floor((duration / (1000 * 60)) % 60),
-    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
-
-  hours = hours < 10 ? "0" + hours : hours;
-  minutes = minutes < 10 ? "0" + minutes : minutes;
-  seconds = seconds < 10 ? "0" + seconds : seconds;
-
-  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
-}

@@ -17,43 +17,43 @@ var { Process } = require("./process");
  * @return {[type]}      [description]
  */
 function restore(settings) {
-  const defaults = {
-    timestamp: "",
-    url: "",
-    domain: "",
-    directory: "restore", // base directory
+    const defaults = {
+        timestamp: "",
+        url: "",
+        domain: "",
+        directory: "restore", // base directory
 
-    // @TODO implement max number of pages to restore
-    // max_pages: null, (unlimited)
+        // @TODO implement max number of pages to restore
+        // max_pages: null, (unlimited)
 
-    links: true, // restore links
-    assets: true, // restore assets
-    log: false,
-    logFile: "restore.log",
-    concurrency: settings.concurrency || 1
-  };
+        links: true, // restore links
+        assets: true, // restore assets
+        log: false,
+        logFile: "restore.log",
+        concurrency: settings.concurrency || 1
+    };
 
-  if (typeof settings === "string") {
-    let url = settings;
-    settings = {};
-    settings.url = url;
-  }
+    if (typeof settings === "string") {
+        let url = settings;
+        settings = {};
+        settings.url = url;
+    }
 
-  settings = Object.assign(defaults, settings);
+    settings = Object.assign(defaults, settings);
 
-  if (settings.url !== "") {
-    const { domain, timestamp } = parse.parse(settings.url);
-    settings.domain = domain;
-    settings.timestamp = timestamp;
-  } else if (settings.domain !== "" && settings.timestamp !== "") {
-    settings.url = `https://web.archive.org/web/${settings.timestamp}/http://${
-      settings.domain
-    }`;
-  } else {
-    throw "Invalid settings";
-  }
+    if (settings.url !== "") {
+        const { domain, timestamp } = parse.parse(settings.url);
+        settings.domain = domain;
+        settings.timestamp = timestamp;
+    } else if (settings.domain !== "" && settings.timestamp !== "") {
+        settings.url = `https://web.archive.org/web/${
+            settings.timestamp
+        }/http://${settings.domain}`;
+    } else {
+        throw "Invalid settings";
+    }
 
-  return new Process(settings);
+    return new Process(settings);
 }
 
 // @TODO implement redirect
@@ -72,7 +72,4 @@ Restore.prototype.writeRedirect = function(url, file) {
 };
 */
 
-module.exports = {
-  restore,
-  restoreUrl: restoreUrl
-};
+module.exports = restore;
