@@ -1,20 +1,21 @@
 module.exports = {
-    VERSION: "1.0.0",
-    ARCHIVE_SOURCE: "http://web.archive.org",
-    ARCHIVE_TEMPLATE: "https://web.archive.org/web/",
-    RESTORE_STATUS: {
-        RESTORED: "restored",
-        FAILED: "failed",
-        UNARCHIVED: "unarchived",
-        RESTORING: "restoring",
-        EMPTY: "notrestored"
-    },
-    EVENTS: {
-        STARTED: "start",
-        STOP: "stop",
-        RESTORING: "restoring",
-        RESTORED: "restored",
-        COMPLETED: "completed",
-        FAILED: "failed"
-    }
+  VERSION: "0.0.1",
+  ARCHIVE_SOURCE: "http://web.archive.org",
+  ARCHIVE_TEMPLATE: "https://web.archive.org/web/",
+  RESTORE_STATUS: {
+    RESTORED: "restored",
+    FAILED: "failed",
+    UNARCHIVED: "unarchived",
+    RESTORING: "restoring",
+    EMPTY: "notrestored"
+  },
+  EVENTS: {
+    STARTED: "start",
+    STOP: "stop",
+    RESTORING: "restoring",
+    RESTORED: "restored",
+    COMPLETED: "completed",
+    FAILED: "failed",
+    CDXQUERY: "cdxquery"
+  }
 };

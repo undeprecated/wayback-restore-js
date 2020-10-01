@@ -1,6 +1,8 @@
 /* jshint node: true, esversion: 6 */
 /* global define, require, module, Promise, Map, async */
 
+"use strict";
+
 // Core Modules
 var debug = require("debug")("wayback:process");
 var es = require("event-stream");
@@ -48,28 +50,14 @@ function Process(settings) {
   /**
    * Base directory where a restore directory will be output.
    */
-  this.settings.directory = help.resolveHome(this.settings.directory);
-  /*this.settings.directory = path.normalize(
-    this.settings.directory + "/" + this.settings.domain
-);*/
-
-  /**
-   * Directory where assets are saved.
-   */
-
-  this.restore_directory = path.join(
-    this.settings.directory,
-    this.settings.domain
+  this.restore_directory = path.normalize(
+    help.resolveHome(this.settings.directory) + "/" + this.settings.domain
   );
 
-  this.results_file = path.join(
-    this.settings.directory,
-    this.settings.resultsFile
-  );
   this.log_file = path.join(this.settings.directory, this.settings.logFile);
 
   this.root_linksre = new RegExp(
-    "(http[s:])?[//w.]*" + this.settings.domain,
+    "(http(s:))?[//w.]*" + this.settings.domain,
     "ig"
   );
 
@@ -84,79 +72,79 @@ function Process(settings) {
     failed_count: 0,
     first_file: ""
   };
-
-  this.process_stopped = false;
 }
 
 util.inherits(Process, EventEmitter);
 
-Process.prototype.onCompleted = function(results) {};
+//Process.prototype.onCompleted = function(results) {};
 
 Process.prototype.start = async function() {
-  let me = this;
   this.results.started = Date.now();
 
   this.emit(EVENT.STARTED);
 
-  await this.createOutputDirectory(this.settings.directory);
+  await this.createOutputDirectory(this.restore_directory);
 
   await this.fetchCdx({
     url: this.settings.domain + "*",
     filter: "statuscode:200",
     collapse: "timestamp:8,digest",
     to: this.settings.timestamp
-    //output: 'json'
   });
 
-  console.log("Found " + this.db.cdx.size + " to restore.");
+  /**
+   * Restores selectively based on a given URL.
+   */
+  this.q = async.queue((url, callback) => {
+    this.restore(url, callback);
+  }, this.settings.concurrency);
 
-  var q = async.queue(async (asset, callback) => {
-    //console.log("asset ", asset);
-    await me.restore(asset);
-    callback();
-  }, 2);
-  //var q = async.queue(this.restore, 20);
+  this.q.drain = async () => {
+    return await this.complete();
+  };
 
-  let restores = [];
+  this.q.push(this.settings.url);
+
+  /**
+   * This method finds all CDX snapshots and restores based on the results.
+   */
+  /*
+  await this.fetchCdx({
+    url: this.settings.domain + "*",
+    filter: "statuscode:200",
+    collapse: "timestamp:8,digest",
+    to: this.settings.timestamp
+  });
+
+  this.q = async.queue((asset, callback) => {
+    this.restoreAsset(asset, callback);
+  }, this.settings.concurrency);
+
+  this.q.drain = async () => {
+    return await this.complete();
+  };
+
   this.db.cdx.forEach((asset, keys) => {
-    q.push(asset);
-    restores.push(this.restore(asset));
+    this.q.push(asset);
   });
-
-  console.log("# of restore ", restores.length);
-  try {
-    await async.parallelLimit(restores, 1, this.complete);
-  } catch (e) {
-    console.log(e);
-  }
-
-  //this.complete();
-
-  /*await this.restore(this.settings.url);
-
-  if (this.process_stopped) {
-  } else {
-    this.complete();
-}*/
+  */
+  return this;
 };
 
 Process.prototype.stop = function() {
-  this.process_stopped = true;
+  //this.process_stopped = true;
   this.emit(EVENT.STOP);
 };
 
-Process.prototype.fetchCdx = function(options, callback) {
+Process.prototype.fetchCdx = function(options) {
   var me = this;
 
   return new Promise(function(resolve, reject) {
     cdx
       .stream(options)
       .on("end", function() {
+        me.emit(EVENT.CDXQUERY, me.db.cdx);
         resolve(me.db.cdx);
-
-        /*if (callback) {
-              return callback.call(me.db.cdx);
-          }*/
       })
       .pipe(
         es.map(function(record, next) {
@@ -166,8 +154,8 @@ Process.prototype.fetchCdx = function(options, callback) {
           asset.key = record.urlkey;
           asset.original_url = record.original;
           asset.timestamp = record.timestamp;
+          asset.domain = me.settings.domain;
           asset.mimetype = record.mimetype;
-          //asset.domain = me.settings.domain;
           //asset.type = asset.setTypeFromMimeType(record.mimetype);
 
           me.db.cdx.set(asset.key, asset);
@@ -176,7 +164,83 @@ Process.prototype.fetchCdx = function(options, callback) {
   });
 };
 
-Process.prototype.restore = async function(asset) {
+/**
+ * @param {string} url - A URL to restore.
+ * @param {function} callback - A callback function exected after restore.
+ */
+Process.prototype.restore = async function(url, callback) {
+  var me = this;
+
+  debug("processing url", url);
+  try {
+    var asset = await me.findAssetByUrl(url);
+
+    if (asset) {
+      debug("found asset to restore for url", asset.original_url);
+
+      if (!me.hasBeenRestored(asset)) {
+        /*
+        let restored = await this.restoreAsset(asset);
+
+        if (restored) {
+          if (this.settings.assets) {
+            //debug("restoring assets");
+            this.q.push([...asset.assets]);
+          }
+          if (this.settings.links) {
+            //debug("restoring links");
+            this.q.push([...asset.links]);
+          }
+        }
+        */
+        try {
+          me.setRestoring(asset);
+
+          var result = await asset.fetch(true);
+
+          if (result) {
+            asset.content = asset.content.replace(this.root_linksre, "");
+          }
+
+          //debug("save asset", asset.original_url);
+          await me.saveAsset(asset);
+
+          asset.clear();
+
+          //debug("set restored", asset.original_url);
+          me.setRestored(asset);
+
+          if (me.results.first_file === "") {
+            me.results.first_file = asset.filename;
+          }
+        } catch (error) {
+          me.restoreFailed(error, asset);
+        }
+
+        if (me.settings.assets) {
+          //debug("restoring assets");
+          this.q.push([...asset.assets]);
+        }
+        if (me.settings.links) {
+          //debug("restoring links");
+          this.q.push([...asset.links]);
+        }
+      } else {
+        debug("already restored url", asset.original_url);
+      }
+    }
+  } catch (err) {
+    debug(err);
+  }
+
+  return callback();
+};
+
+/**
+ * @param {Object} asset - An Asset CDX record.
+ * @param {function} callback - A callback function to execute after restored.
+ */
+Process.prototype.restoreAsset = async function(asset, callback) {
   var me = this;
 
   try {
@@ -199,77 +263,23 @@ Process.prototype.restore = async function(asset) {
     if (me.results.first_file === "") {
       me.results.first_file = asset.filename;
     }
+
+    if (callback) {
+      return callback(true, asset);
+    } else {
+      return new Promise(function(resolve, reject) {
+        return resolve(true, asset);
+      });
+    }
   } catch (error) {
     me.restoreFailed(error, asset);
-  }
-};
 
-Process.prototype.restore2 = async function(urls) {
-  var me = this;
-  var i;
-
-  if (this.process_stopped) {
-    return;
-  }
-
-  if (!Array.isArray(urls)) {
-    urls = [urls];
-  }
-
-  for (i = 0; i < urls.length; i++) {
-    var url = urls[i];
-
-    debug("processing url", url);
-
-    // @TODO: do not process urls that are not part of our domain
-
-    try {
-      var asset = await me.findAssetByUrl(url);
-
-      if (asset) {
-        debug("found asset to restore for url", asset.original_url);
-
-        if (!me.hasBeenRestored(asset)) {
-          //await me.restore( asset );
-          me.setRestoring(asset);
-
-          try {
-            var result = await asset.fetch(true);
-
-            if (result) {
-              asset.content = asset.content.replace(this.root_linksre, "");
-            }
-
-            debug("save asset", asset.original_url);
-            await me.saveAsset(asset);
-
-            asset.clear();
-
-            debug("set restored", asset.original_url);
-            me.setRestored(asset);
-
-            if (me.results.first_file === "") {
-              me.results.first_file = asset.filename;
-            }
-          } catch (error) {
-            me.restoreFailed(error, asset);
-          }
-
-          if (me.settings.assets) {
-            debug("restoring assets");
-            await me.restore(asset.assets);
-          }
-
-          if (me.settings.links) {
-            debug("restoring links");
-            await me.restore(asset.links);
-          }
-        } else {
-          debug("already restored url", asset.original_url);
-        }
-      }
-    } catch (err) {
-      debug(err);
+    if (callback) {
+      return callback(false, asset);
+    } else {
+      return new Promise(function(resolve, reject) {
+        return reject(callback);
+      });
     }
   }
 };
@@ -311,16 +321,16 @@ Process.prototype.complete = async function() {
     }
   }
 
-  me.saveResults();
+  //me.saveResults();
 
   me.emit(EVENT.COMPLETED, me.results);
 
-  me.onCompleted(me.results);
+  //me.onCompleted(me.results);
 };
 
-Process.prototype.saveResults = async function() {
-  await fs.outputFile(this.results_file, JSON.stringify(this.results));
-};
+//Process.prototype.saveResults = async function() {
+//await fs.outputFile(this.results_file, JSON.stringify(this.results));
+//};
 
 Process.prototype.saveAsset = async function(asset) {
   asset.filename = convertLinkToLocalFile(
@@ -340,15 +350,15 @@ Process.prototype.saveAsset = async function(asset) {
 };
 
 Process.prototype.setRestoring = function(asset) {
-  //asset.setRestoring();
-  //this.db.restored[asset.key] = RESTORE_STATUS.RESTORING;
+  asset.setRestoring();
+  this.db.restored[asset.key] = RESTORE_STATUS.RESTORING;
   this.emit(RESTORE_STATUS.RESTORING, asset);
   return asset;
 };
 
 Process.prototype.setRestored = function(asset) {
-  //asset.setRestored();
-  //this.db.restored[asset.key] = RESTORE_STATUS.RESTORED;
+  asset.setRestored();
+  this.db.restored[asset.key] = RESTORE_STATUS.RESTORED;
   this.results.restored_count++;
   this.emit(RESTORE_STATUS.RESTORED, asset);
   return asset;
@@ -356,7 +366,6 @@ Process.prototype.setRestored = function(asset) {
 
 Process.prototype.restoreFailed = function(error, asset) {
   debug("restore failed", asset);
-  //debug('snapshot', asset.getSnapshot());
   debug(error);
   asset.setFailed();
   this.results.failed_count++;

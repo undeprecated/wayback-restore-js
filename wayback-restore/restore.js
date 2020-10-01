@@ -10,20 +10,6 @@ var debug = require("debug")("wayback:restore");
 var parse = require("./parse");
 var { Process } = require("./process");
 
-/*
-var restore = Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
-
-var restore = Wayback.restore({
-    url:
-        "http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk"
-});
-
-var restore = Wayback.restore({
-    domain: 'cashpropertysolutions.co.uk',
-    timestamp: "20150531"
-});
-*/
-
 /**
  * This is the main restore process of a Wayback Machine archive.
  *
@@ -44,7 +30,7 @@ function restore(settings) {
     assets: true, // restore assets
     log: false,
     logFile: "restore.log",
-    resultsFile: "results.wbmr"
+    concurrency: settings.concurrency || 1
   };
 
   if (typeof settings === "string") {
@@ -60,27 +46,15 @@ function restore(settings) {
     settings.domain = domain;
     settings.timestamp = timestamp;
   } else if (settings.domain !== "" && settings.timestamp !== "") {
-    settings.url = `https://web.archive.org/web/${settings.timestamp}/http://${settings.domain}`;
+    settings.url = `https://web.archive.org/web/${settings.timestamp}/http://${
+      settings.domain
+    }`;
   } else {
     throw "Invalid settings";
   }
 
   return new Process(settings);
 }
-
-/*
-// @TODO implement this new method
-function restore( settings ) {
-    const defaults = {...default settings};
-    settings = Object.assign(defaults, settings);
-    this.process = new Process( settings );
-    this.process.on('completed', this.onCompleted);
-    this.process.on('restoring', this.onRestoring);
-    this.process.on('restored', this.onRestored);
-
-    return this.process;
-}
-*/
 
 // @TODO implement redirect
 /*
@@ -98,4 +72,7 @@ Restore.prototype.writeRedirect = function(url, file) {
 };
 */
 
-module.exports = restore;
+module.exports = {
+  restore,
+  restoreUrl: restoreUrl
+};
