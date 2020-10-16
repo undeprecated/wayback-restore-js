@@ -19,16 +19,16 @@ var fs = require("fs-extra");
 // Local Modules
 var core = require("./core");
 var help = require("./helpers");
-var Asset = require("./asset").Asset;
+var Asset = require("./asset");
 var cdx = require("./cdx");
-
-var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
-var ARCHIVE_SOURCE = core.ARCHIVE_SOURCE;
 
 var RESTORE_STATUS = core.RESTORE_STATUS;
 
 // Events fired by Process
 var EVENT = core.EVENTS;
+
+var ARCHIVE_SOURCE_RE = new RegExp(core.ARCHIVE_SOURCE, "i");
+var ARCHIVE_TEMPLATE_RE = new RegExp(core.ARCHIVE_TEMPLATE, "i");
 
 /**
  * Asset restore process.
@@ -41,6 +41,18 @@ function Process(settings) {
     this.settings = settings;
 
     debug("Settings", this.settings);
+
+    this.wb_re = new RegExp(
+        "(/web/[0-9]+([imjscd_/]+)?(http[s]?://[0-9a-zA-Z-_.]*" +
+            this.settings.domain +
+            ")?)",
+        "gim"
+    );
+
+    this.root_linksre = new RegExp(
+        "(http(s:))?[//w.]*" + this.settings.domain,
+        "ig"
+    );
 
     this.db = {
         cdx: new Map(),
@@ -55,11 +67,6 @@ function Process(settings) {
     );
 
     this.log_file = path.join(this.settings.directory, this.settings.logFile);
-
-    this.root_linksre = new RegExp(
-        "(http(s:))?[//w.]*" + this.settings.domain,
-        "ig"
-    );
 
     this.results = {
         url: this.settings.url,
@@ -133,7 +140,6 @@ Process.prototype.start = async function() {
 };
 
 Process.prototype.stop = function() {
-    //this.process_stopped = true;
     this.q.kill();
     this.emit(EVENT.STOP);
 };
@@ -161,17 +167,32 @@ Process.prototype.fetchCdx = function(options) {
                 es.map(function(record, next) {
                     record = JSON.parse(record);
 
-                    var asset = new Asset();
+                    var asset = new Asset.Asset();
                     asset.key = record.urlkey;
                     asset.original_url = record.original;
                     asset.timestamp = record.timestamp;
-                    asset.domain = me.settings.domain;
+                    //asset.domain = me.settings.domain;
                     asset.mimetype = record.mimetype;
+                    asset.type = Asset.convertMimeType(record.mimetype);
                     //asset.type = asset.setTypeFromMimeType(record.mimetype);
 
                     me.db.cdx.set(asset.key, asset);
                 })
             );
+    });
+};
+
+Process.prototype.downloadFile = async (url, path) => {
+    const res = await fetch(url);
+    const fileStream = fs.createWriteStream(path);
+    await new Promise((resolve, reject) => {
+        res.body.pipe(fileStream);
+        res.body.on("error", err => {
+            reject(err);
+        });
+        fileStream.on("finish", function() {
+            resolve();
+        });
     });
 };
 
@@ -190,23 +211,66 @@ Process.prototype.restore = async function(url, callback) {
             debug("found asset to restore for url", asset.original_url);
 
             if (!me.hasBeenRestored(asset)) {
-                /*
-        let restored = await this.restoreAsset(asset);
-
-        if (restored) {
-          if (this.settings.assets) {
-            //debug("restoring assets");
-            this.q.push([...asset.assets]);
-          }
-          if (this.settings.links) {
-            //debug("restoring links");
-            this.q.push([...asset.links]);
-          }
-        }
-        */
                 try {
                     me.setRestoring(asset);
 
+                    // if this is an image, stream download direct to file
+                    // else get content
+
+                    var content = await asset.fetch(true);
+                    //
+                    //me.downloadFile(asset.getSnapshotUrl(raw), asset.)
+
+                    if (content) {
+                        if (
+                            asset.type === "text" ||
+                            asset.type === "css" ||
+                            asset.type === "script"
+                        ) {
+                            console.log(typeof content);
+                            content = me.contentCleanup(content);
+
+                            //content = content.replace(this.root_linksre, "");
+                            try {
+                                var $ = cheerio.load(content);
+
+                                if (me.type === "text") {
+                                    content = $.html();
+                                }
+                                if (me.type === "css" || me.type === "script") {
+                                    content = $.text();
+                                }
+
+                                /**
+                                 * This pushes assets into the restore queue
+                                 */
+                                if (me.settings.assets) {
+                                    this.q.push([...me.extractAssets($)]);
+                                }
+                                /**
+                                 * This pushes links we found in the asset we might need
+                                 * to restore into the queue.
+                                 */
+                                if (me.settings.links) {
+                                    this.q.push([...me.extractLinks($)]);
+                                }
+
+                                //asset.links = this.extractLinks($);
+                                //asset.assets = this.extractAssets($);
+                            } catch (err) {
+                                debug(err);
+                            }
+                        }
+
+                        if (await me.saveAsset(asset, content)) {
+                            me.setRestored(asset);
+                        }
+
+                        if (me.results.first_file === "") {
+                            me.results.first_file = asset.restored_file;
+                        }
+                    }
+                    /*
                     var result = await asset.fetch(true);
 
                     if (result) {
@@ -225,20 +289,26 @@ Process.prototype.restore = async function(url, callback) {
                     me.setRestored(asset);
 
                     if (me.results.first_file === "") {
-                        me.results.first_file = asset.filename;
-                    }
+                        me.results.first_file = asset.restored_file;
+                    }*/
                 } catch (error) {
                     me.restoreFailed(error, asset);
                 }
 
+                // @TODO: use restoreAsset()
+                /**
+                 * This pushes assets into the restore queue
+                 *
                 if (me.settings.assets) {
-                    //debug("restoring assets");
                     this.q.push([...asset.assets]);
-                }
+                }*/
+                /**
+                 * This pushes links we found in the asset we might need
+                 * to restore into the queue.
+                 *
                 if (me.settings.links) {
-                    //debug("restoring links");
                     this.q.push([...asset.links]);
-                }
+                }*/
             } else {
                 debug("already restored url", asset.original_url);
             }
@@ -247,55 +317,24 @@ Process.prototype.restore = async function(url, callback) {
         debug(err);
     }
 
-    return callback();
+    return callback(asset);
 };
 
 /**
- * @param {Object} asset - An Asset CDX record.
- * @param {function} callback - A callback function to execute after restored.
+ * Remove extraneous code from the restored content and cleanup links.
  */
-Process.prototype.restoreAsset = async function(asset, callback) {
-    var me = this;
+Process.prototype.contentCleanup = function(content) {
+    /**
+     * makes http://domain-to-restore.com links relative
+     */
+    content = content.replace(this.root_linksre, "");
 
-    try {
-        me.setRestoring(asset);
+    content = content.replace(this.wb_re, "");
+    content = content.replace(ARCHIVE_TEMPLATE_RE, "");
+    //content = content.replace(/(https?:)?\/\/web.archive.org/gi, "");
+    //content = content.replace(/(https?:)?\/\/web.archive.org/gi, "");
 
-        var result = await asset.fetch(true);
-
-        if (result) {
-            asset.content = asset.content.replace(this.root_linksre, "");
-        }
-
-        //debug("save asset", asset.original_url);
-        await me.saveAsset(asset);
-
-        asset.clear();
-
-        debug("restored", asset.original_url);
-        me.setRestored(asset);
-
-        if (me.results.first_file === "") {
-            me.results.first_file = asset.filename;
-        }
-
-        if (callback) {
-            return callback(true, asset);
-        } else {
-            return new Promise(function(resolve, reject) {
-                return resolve(true, asset);
-            });
-        }
-    } catch (error) {
-        me.restoreFailed(error, asset);
-
-        if (callback) {
-            return callback(false, asset);
-        } else {
-            return new Promise(function(resolve, reject) {
-                return reject(callback);
-            });
-        }
-    }
+    return content;
 };
 
 Process.prototype.findAssetByUrl = async function(url) {
@@ -344,21 +383,22 @@ Process.prototype.complete = async function() {
     //me.onCompleted(me.results);
 };
 
-Process.prototype.saveAsset = async function(asset) {
-    asset.filename = convertLinkToLocalFile(
-        this.settings.domain,
-        asset.original_url
-    );
+Process.prototype.saveAsset = async function(asset, content) {
+    var url = this.cleanupWaybackUrl(asset.original_url);
+
+    asset.restored_file = this.convertToLocalFilePath(url);
 
     try {
         await fs.outputFile(
-            path.join(this.restore_directory, asset.filename),
-            asset.content
+            path.join(this.restore_directory, asset.restored_file),
+            content
+            //asset.content
         );
     } catch (err) {
         debug("Error saving to file", file, err);
+        return false;
     }
-    return asset;
+    return true;
 };
 
 Process.prototype.setRestoring = function(asset) {
@@ -414,57 +454,44 @@ Process.prototype.getLogData = function(filename) {
     return log;
 };
 
-function convertLinkToLocalFile(domain, link) {
-    var file;
-    var key = link;
-    //var key = Url.makeRelative(link);
+/**
+ * Clean up a URL by removing the wayback machine snapshot information.
+ */
+Process.prototype.cleanupWaybackUrl = function(link) {
+    var url = link;
 
-    // @TODO - move this to constructor? doesn't need to be called every time
-    var re = new RegExp(ARCHIVE_SOURCE, "i");
+    url = url.replace(ARCHIVE_SOURCE_RE, "");
 
-    key = key.replace(re, "");
-
-    re = new RegExp(
-        "(/web/[0-9]+([imjscd_/]+)?(http[s]?://[0-9a-zA-Z-_.]*" +
-            domain +
-            ")?)",
-        "gim"
-    );
-    key = key.replace(re, "");
+    url = url.replace(this.wb_re, "");
 
     // remove leading slashes
-    key = key.replace(/^\/+/i, "");
+    url = url.replace(/^\/+/i, "");
 
-    file = convertToPath(key);
-
-    return file;
-}
+    return url;
+};
 
 /**
  * Converts a URL to a local file path and name
  */
-function convertToPath(url) {
+Process.prototype.convertToLocalFilePath = function(url) {
     var obj = path.parse(help.makeRelative(url));
 
-    var dir = obj.dir,
-        filename = obj.name !== "" ? obj.name : "index",
-        suffix = obj.ext !== "" ? obj.ext : ".html";
+    var dir = obj.dir;
+    var filename = obj.name !== "" ? obj.name : "index";
+    var suffix = obj.ext !== "" ? obj.ext : ".html";
 
     dir = dir.replace(/^\//, ""); // remove leading slash
     dir = dir.replace(/\/$/, ""); // remove trailing slash
 
-    return dir + "/" + filename + suffix;
-}
+    return path.join(dir, filename + suffix);
+};
 
 function convertLinkToKey(domain, link) {
     var key = help.makeRelative(link);
 
-    // @TODO - move this to constructor? doesn't need to be called every time
-    var re = new RegExp(ARCHIVE_TEMPLATE, "i");
+    key = key.replace(ARCHIVE_TEMPLATE_RE, "");
 
-    key = key.replace(re, "");
-
-    re = new RegExp(
+    var re = new RegExp(
         "(/web/[0-9]+([imjscd_/]+)?(http[s]?://[0-9a-zA-Z-_.]*" +
             domain +
             ")?)",

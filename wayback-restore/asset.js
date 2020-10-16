@@ -18,119 +18,147 @@ var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
 var RESTORE_STATUS = core.RESTORE_STATUS;
 
 function Asset() {
-  this.key = null;
+    // CDX urlkey
+    this.key = null;
 
-  // the url to restore
-  this.original_url = "";
+    // the url to restore
+    this.original_url = "";
 
-  this.timestamp = "";
+    // path to local file
+    this.restored_file = "";
 
-  // restored | failed | unarchived
-  this.status = RESTORE_STATUS.EMPTY;
+    this.timestamp = "";
 
-  // mimetype: html, image, css, js, based on wayback types
-  this.mimetype = "";
+    // restored | failed | unarchived
+    this.status = RESTORE_STATUS.EMPTY;
 
-  this.type = "";
+    // mimetype: html, image, css, js, based on wayback types
+    this.mimetype = "";
 
-  // restored content
-  //this.content = null;
+    this.type = "";
 
-  // links on the page to restore
-  //this.links = [];
+    // restored content
+    //this.content = null;
 
-  // assets used by the page
-  //this.assets = [];
+    // links on the page to restore
+    //this.links = [];
+
+    // assets used by the page
+    //this.assets = [];
 }
 
-Asset.prototype.getSnapshot = function(raw) {
-  var timestamp = this.timestamp;
-  var url = this.original_url;
-  var flag = raw ? "id_" : "";
+Asset.prototype.getSnapshotUrl = function(raw) {
+    var timestamp = this.timestamp;
+    var url = this.original_url;
+    var flag = raw ? "id_" : "";
 
-  return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
+    return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
 };
 
-Asset.prototype.contentType = function() {
-  return convertMimeType(this.mimetype);
-};
+/*Asset.prototype.contentType = function() {
+    return convertMimeType(this.mimetype);
+};*/
 
-Asset.prototype.setTypeFromMimeType = function(mimetype) {
-  this.type = convertMimeType(mimetype);
-};
+/*Asset.prototype.setTypeFromMimeType = function(mimetype) {
+    this.type = convertMimeType(mimetype);
+};*/
 
 Asset.prototype.clear = function() {
-  this.content = null;
+    this.content = null;
 };
 
 Asset.prototype.isRestored = function() {
-  return this.status === RESTORE_STATUS.RESTORED;
+    return this.status === RESTORE_STATUS.RESTORED;
 };
 
 Asset.prototype.setRestored = function() {
-  this.status = RESTORE_STATUS.RESTORED;
+    this.status = RESTORE_STATUS.RESTORED;
 };
 
 Asset.prototype.setFailed = function() {
-  this.status = RESTORE_STATUS.FAILED;
+    this.status = RESTORE_STATUS.FAILED;
 };
 
 Asset.prototype.setRestoring = function() {
-  this.status = RESTORE_STATUS.RESTORING;
+    this.status = RESTORE_STATUS.RESTORING;
 };
 
 /**
  * Get the content from Waybak Machine.
  *
- * @param   {String}    url        A url to restore
- * @return  {Promise}   A Promise to return restored content.
+ * @param {String} url - A url to restore
+ * @param {mix} The restored content
  */
 Asset.prototype.fetch = async function(raw) {
-  var me = this;
-  var flag = false;
+    var me = this;
+    var flag = false;
 
-  var url = me.getSnapshot(raw);
+    var url = me.getSnapshotUrl(raw);
 
-  debug("fetch url", url);
+    debug("asset", me);
+    debug("fetch url", url);
 
-  try {
-    me.content = await http.get(url);
+    try {
+        var content = await http.get(url);
 
-    //me.content = Buffer.from(new Uint8Array(me.content));
-    //me.content = Buffer.from(await http.get(url));
-
-    if (
-      me.contentType() === "text" ||
-      me.contentType() === "css" ||
-      me.contentType() === "script"
-    ) {
-      me.content = Buffer.from(new Uint8Array(me.content));
-      //me.content = me.content.toString("utf8");
-
-      try {
-        var $ = cheerio.load(me.content);
-        if (me.contentType() === "text") {
-          me.content = $.html();
-        }
-        if (me.contentType() === "css" || me.contentType() === "script") {
-          me.content = $.text();
+        if (
+            me.type === "json" ||
+            me.type === "xml" ||
+            me.type === "text" ||
+            me.type === "css" ||
+            me.type === "script"
+        ) {
+            debug("buffer array");
+            return Buffer.from(new Uint8Array(content));
+        } else {
+            return content;
         }
 
-        me.links = me.extractLinks($);
-        me.assets = me.extractAssets($);
-        me.content = contentCleanup(me.content, me.domain);
+        /*me.content = await http.get(url);
 
-        flag = true;
-      } catch (err) {
+        //me.content = Buffer.from(new Uint8Array(me.content));
+        //me.content = Buffer.from(await http.get(url));
+
+        if (me.type === "xml") {
+            me.content = Buffer.from(new Uint8Array(me.content));
+            return true;
+        }
+
+        if (me.type === "json") {
+            me.content = Buffer.from(new Uint8Array(me.content));
+            return true;
+        }
+
+        if (me.type === "text" || me.type === "css" || me.type === "script") {
+            me.content = Buffer.from(new Uint8Array(me.content));
+            //me.content = me.content.toString("utf8");
+
+            try {
+                var $ = cheerio.load(me.content);
+                if (me.type === "text") {
+                    me.content = $.html();
+                }
+                if (me.type === "css" || me.type === "script") {
+                    me.content = $.text();
+                }
+
+                me.links = me.extractLinks($);
+                me.assets = me.extractAssets($);
+                me.content = contentCleanup(me.content, me.domain);
+
+                flag = true;
+            } catch (err) {
+                debug(err);
+            }
+        }
+
+        //return me.content;
+        return flag;*/
+    } catch (err) {
         debug(err);
-      }
     }
 
-    //return me.content;
-    return flag;
-  } catch (err) {
-    debug(err);
-  }
+    return "";
 };
 
 /**
@@ -140,38 +168,38 @@ Asset.prototype.fetch = async function(raw) {
  * @return {Array}  Links found
  */
 Asset.prototype.extractAssets = function($) {
-  var me = this;
+    var me = this;
 
-  me.assets = [];
+    me.assets = [];
 
-  $("[src], link[href]").each(function(index, link) {
-    var src = $(link).attr("src");
+    $("[src], link[href]").each(function(index, link) {
+        var src = $(link).attr("src");
 
-    if (src) {
-      me.assets.push(src);
-      $(link).attr("src", helpers.makeRelative(src));
-    }
+        if (src) {
+            me.assets.push(src);
+            $(link).attr("src", helpers.makeRelative(src));
+        }
 
-    var href = $(link).attr("href");
-    if (href) {
-      me.assets.push(href);
-      $(link).attr("href", helpers.makeRelative(href));
-    }
-  });
+        var href = $(link).attr("href");
+        if (href) {
+            me.assets.push(href);
+            $(link).attr("href", helpers.makeRelative(href));
+        }
+    });
 
-  return me.assets;
+    return me.assets;
 };
 
 Asset.prototype.extractLinks = function($) {
-  var me = this,
-    domain = this.domain;
+    var me = this,
+        domain = this.domain;
 
-  me.links = [];
+    me.links = [];
 
-  // get all hrefs
-  $("a[href]").each(function(index, a) {
-    var href = $(a).attr("href");
-    /*
+    // get all hrefs
+    $("a[href]").each(function(index, a) {
+        var href = $(a).attr("href");
+        /*
         // remove archive
         href = rewriteLink(domain, href);
 
@@ -180,31 +208,47 @@ Asset.prototype.extractLinks = function($) {
             href = Url.makeRelative(href);
         }*/
 
-    if (filter(href)) {
-      // rewrites hrefs
-      //$(a).attr("href", "test");
-      //href = Url.makeRelative(href);
-      me.links.push(href);
-    }
-  });
+        if (filter(href)) {
+            // rewrites hrefs
+            //$(a).attr("href", "test");
+            //href = Url.makeRelative(href);
+            me.links.push(href);
+        }
+    });
 
-  return me.links;
+    return me.links;
 };
 
+/*
+Asset.prototype.downloadFile = async (url, path) => {
+    const res = await fetch(url);
+    const fileStream = fs.createWriteStream(path);
+    await new Promise((resolve, reject) => {
+        res.body.pipe(fileStream);
+        res.body.on("error", err => {
+            reject(err);
+        });
+        fileStream.on("finish", function() {
+            resolve();
+        });
+    });
+};
+*/
+
 function filter(link) {
-  if (
-    !(
-      /^javascript/i.test(link) ||
-      /^mailto/i.test(link) ||
-      ///^http/i.test(link) ||
-      /^#/.test(link) ||
-      /^\?/.test(link) ||
-      /^\/\//i.test(link)
-    )
-  ) {
-    return link;
-  }
-  return;
+    if (
+        !(
+            /^javascript/i.test(link) ||
+            /^mailto/i.test(link) ||
+            ///^http/i.test(link) ||
+            /^#/.test(link) ||
+            /^\?/.test(link) ||
+            /^\/\//i.test(link)
+        )
+    ) {
+        return link;
+    }
+    return;
 }
 
 /**
@@ -215,38 +259,43 @@ function filter(link) {
  * @return {string} AssetType
  */
 function convertMimeType(type) {
-  if (type.match(/^text\/css/i)) {
-    return "css";
-  } else if (type.match(/^text\//i)) {
-    return "text";
-  } else if (type.match(/^image\//i)) {
-    return "image";
-  } else if (type.match(/^video\//i)) {
-    return "video";
-  } else if (type.match(/^audio\//i)) {
-    return "audio";
-  } else if (type.match(/javascript/i)) {
-    return "script";
-  } else {
-    return "other";
-  }
+    if (type.match(/^text\/css/i)) {
+        return "css";
+    } else if (type.match(/^text\//i)) {
+        return "text";
+    } else if (type.match(/^image\//i)) {
+        return "image";
+    } else if (type.match(/^video\//i)) {
+        return "video";
+    } else if (type.match(/^audio\//i)) {
+        return "audio";
+    } else if (type.match(/javascript/i)) {
+        return "script";
+    } else if (type.match(/xml/i)) {
+        return "xml";
+    } else if (type === "application/json") {
+        return "json";
+    } else {
+        return "other";
+    }
 }
 
 /**
  * Remove extraneous code from the restored content and cleanup links.
- */
+ *
 function contentCleanup(content, domain) {
-  //content = content.replace(/(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{this.options.domain})?)/gim, '');
-  content = content.replace(
-    /(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{domain})?)/gim,
-    ""
-  );
+    //content = content.replace(/(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{this.options.domain})?)/gim, '');
+    content = content.replace(
+        /(\/web\/[0-9]+([imjscd_\/]+)?(http[s]?:\/\/[0-9a-zA-Z-_\.]*{domain})?)/gim,
+        ""
+    );
 
-  content = content.replace(/(https?:)?\/\/web.archive.org/gi, "");
+    content = content.replace(/(https?:)?\/\/web.archive.org/gi, "");
 
-  return content;
-}
+    return content;
+}*/
 
 module.exports = {
-  Asset: Asset
+    Asset: Asset,
+    convertMimeType: convertMimeType
 };
