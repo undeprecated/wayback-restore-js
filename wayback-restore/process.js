@@ -444,7 +444,8 @@ Process.prototype.convertToLocalFilePath = function(url, ext) {
   dir = dir.replace(/\/$/, ""); // remove trailing slash
 
   /**
-   * converts http://example.com/test to text/index.html
+   * converts permalinks that are "folders" with no extension to an html page
+   * Example: http://example.com/test to text/index.html
    */
   if (obj.name && obj.ext === "" && ext === "html") {
     return path.join(dir, filename, "index." + ext);
