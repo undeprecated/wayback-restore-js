@@ -6,81 +6,66 @@
  * based on the mime type.
  */
 var debug = require("debug")("wayback:asset");
+var fs = require("fs-extra");
+var path = require("path");
 
 // Local Modules
 var core = require("./core");
 var helpers = require("./helpers");
 var http = require("./http");
 
-var cheerio = require("cheerio");
+//var cheerio = require("cheerio");
 
 var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
 var RESTORE_STATUS = core.RESTORE_STATUS;
 
 function Asset() {
-    // CDX urlkey
-    this.key = null;
+  // CDX urlkey
+  this.key = null;
 
-    // the url to restore
-    this.original_url = "";
+  // the url to restore
+  this.original_url = "";
 
-    // path to local file
-    this.restored_file = "";
+  // path to local file
+  this.restored_file = "";
 
-    this.timestamp = "";
+  this.timestamp = "";
 
-    // restored | failed | unarchived
-    this.status = RESTORE_STATUS.EMPTY;
+  // restored | failed | unarchived
+  this.status = RESTORE_STATUS.EMPTY;
 
-    // mimetype: html, image, css, js, based on wayback types
-    this.mimetype = "";
+  // mimetype: html, image, css, js, based on wayback types
+  this.mimetype = "";
 
-    this.type = "";
-
-    // restored content
-    //this.content = null;
-
-    // links on the page to restore
-    //this.links = [];
-
-    // assets used by the page
-    //this.assets = [];
+  this.type = "";
 }
 
 Asset.prototype.getSnapshotUrl = function(raw) {
-    var timestamp = this.timestamp;
-    var url = this.original_url;
-    var flag = raw ? "id_" : "";
+  var timestamp = this.timestamp;
+  var url = this.original_url;
+  var flag = raw ? "id_" : "";
 
-    return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
+  return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
 };
 
-/*Asset.prototype.contentType = function() {
-    return convertMimeType(this.mimetype);
-};*/
-
-/*Asset.prototype.setTypeFromMimeType = function(mimetype) {
-    this.type = convertMimeType(mimetype);
-};*/
-
 Asset.prototype.clear = function() {
-    this.content = null;
+  this.content = null;
 };
 
 Asset.prototype.isRestored = function() {
-    return this.status === RESTORE_STATUS.RESTORED;
+  return this.status === RESTORE_STATUS.RESTORED;
 };
 
 Asset.prototype.setRestored = function() {
-    this.status = RESTORE_STATUS.RESTORED;
+  this.status = RESTORE_STATUS.RESTORED;
 };
 
 Asset.prototype.setFailed = function() {
-    this.status = RESTORE_STATUS.FAILED;
+  this.status = RESTORE_STATUS.FAILED;
 };
 
 Asset.prototype.setRestoring = function() {
-    this.status = RESTORE_STATUS.RESTORING;
+  this.status = RESTORE_STATUS.RESTORING;
 };
 
 /**
@@ -89,32 +74,27 @@ Asset.prototype.setRestoring = function() {
  * @param {String} url - A url to restore
  * @param {mix} The restored content
  */
-Asset.prototype.fetch = async function(raw) {
-    var me = this;
-    var flag = false;
+Asset.prototype.fetch = async function(url) {
+  var me = this;
+  var flag = false;
 
-    var url = me.getSnapshotUrl(raw);
+  try {
+    var content = await http.get(url);
+    return Buffer.from(new Uint8Array(content));
 
-    debug("asset", me);
-    debug("fetch url", url);
+    /*if (
+      me.type === "json" ||
+      me.type === "xml" ||
+      me.type === "text" ||
+      me.type === "css" ||
+      me.type === "script"
+    ) {
+      return Buffer.from(new Uint8Array(content));
+    } else {
+      return content;
+  }*/
 
-    try {
-        var content = await http.get(url);
-
-        if (
-            me.type === "json" ||
-            me.type === "xml" ||
-            me.type === "text" ||
-            me.type === "css" ||
-            me.type === "script"
-        ) {
-            debug("buffer array");
-            return Buffer.from(new Uint8Array(content));
-        } else {
-            return content;
-        }
-
-        /*me.content = await http.get(url);
+    /*me.content = await http.get(url);
 
         //me.content = Buffer.from(new Uint8Array(me.content));
         //me.content = Buffer.from(await http.get(url));
@@ -154,11 +134,23 @@ Asset.prototype.fetch = async function(raw) {
 
         //return me.content;
         return flag;*/
-    } catch (err) {
-        debug(err);
-    }
+  } catch (err) {
+    debug(err);
+  }
 
-    return "";
+  return "";
+};
+
+/**
+ * Download streams content directly to a local file.
+ * @param  {String} path - Local file path to save to.
+ */
+Asset.prototype.download = async function(file_path) {
+  var snapshot = this.getSnapshotUrl(true);
+  await fs.ensureDir(path.dirname(file_path));
+  await http.download(snapshot, file_path);
+  this.restored_file = file_path;
+  return this;
 };
 
 /**
@@ -168,38 +160,38 @@ Asset.prototype.fetch = async function(raw) {
  * @return {Array}  Links found
  */
 Asset.prototype.extractAssets = function($) {
-    var me = this;
+  var me = this;
+  var assets = [];
+  //assets = [];
 
-    me.assets = [];
+  $("[src], link[href]").each(function(index, link) {
+    var src = $(link).attr("src");
 
-    $("[src], link[href]").each(function(index, link) {
-        var src = $(link).attr("src");
+    if (src) {
+      assets.push(src);
+      $(link).attr("src", helpers.makeRelative(src));
+    }
 
-        if (src) {
-            me.assets.push(src);
-            $(link).attr("src", helpers.makeRelative(src));
-        }
+    var href = $(link).attr("href");
+    if (href) {
+      assets.push(href);
+      $(link).attr("href", helpers.makeRelative(href));
+    }
+  });
 
-        var href = $(link).attr("href");
-        if (href) {
-            me.assets.push(href);
-            $(link).attr("href", helpers.makeRelative(href));
-        }
-    });
-
-    return me.assets;
+  return assets;
 };
 
 Asset.prototype.extractLinks = function($) {
-    var me = this,
-        domain = this.domain;
+  var me = this;
+  //var domain = this.domain;
 
-    me.links = [];
+  var links = [];
 
-    // get all hrefs
-    $("a[href]").each(function(index, a) {
-        var href = $(a).attr("href");
-        /*
+  // get all hrefs
+  $("a[href]").each(function(index, a) {
+    var href = $(a).attr("href");
+    /*
         // remove archive
         href = rewriteLink(domain, href);
 
@@ -208,15 +200,15 @@ Asset.prototype.extractLinks = function($) {
             href = Url.makeRelative(href);
         }*/
 
-        if (filter(href)) {
-            // rewrites hrefs
-            //$(a).attr("href", "test");
-            //href = Url.makeRelative(href);
-            me.links.push(href);
-        }
-    });
+    if (filter(href)) {
+      // rewrites hrefs
+      //$(a).attr("href", "test");
+      //href = Url.makeRelative(href);
+      links.push(href);
+    }
+  });
 
-    return me.links;
+  return links;
 };
 
 /*
@@ -236,19 +228,19 @@ Asset.prototype.downloadFile = async (url, path) => {
 */
 
 function filter(link) {
-    if (
-        !(
-            /^javascript/i.test(link) ||
-            /^mailto/i.test(link) ||
-            ///^http/i.test(link) ||
-            /^#/.test(link) ||
-            /^\?/.test(link) ||
-            /^\/\//i.test(link)
-        )
-    ) {
-        return link;
-    }
-    return;
+  if (
+    !(
+      /^javascript/i.test(link) ||
+      /^mailto/i.test(link) ||
+      ///^http/i.test(link) ||
+      /^#/.test(link) ||
+      /^\?/.test(link) ||
+      /^\/\//i.test(link)
+    )
+  ) {
+    return link;
+  }
+  return;
 }
 
 /**
@@ -259,25 +251,25 @@ function filter(link) {
  * @return {string} AssetType
  */
 function convertMimeType(type) {
-    if (type.match(/^text\/css/i)) {
-        return "css";
-    } else if (type.match(/^text\//i)) {
-        return "text";
-    } else if (type.match(/^image\//i)) {
-        return "image";
-    } else if (type.match(/^video\//i)) {
-        return "video";
-    } else if (type.match(/^audio\//i)) {
-        return "audio";
-    } else if (type.match(/javascript/i)) {
-        return "script";
-    } else if (type.match(/xml/i)) {
-        return "xml";
-    } else if (type === "application/json") {
-        return "json";
-    } else {
-        return "other";
-    }
+  if (type.match(/^text\/css/i)) {
+    return "css";
+  } else if (type.match(/^text\//i)) {
+    return "text";
+  } else if (type.match(/^image\//i)) {
+    return "image";
+  } else if (type.match(/^video\//i)) {
+    return "video";
+  } else if (type.match(/^audio\//i)) {
+    return "audio";
+  } else if (type.match(/javascript/i)) {
+    return "script";
+  } else if (type.match(/xml/i)) {
+    return "xml";
+  } else if (type === "application/json") {
+    return "json";
+  } else {
+    return "other";
+  }
 }
 
 /**
@@ -296,6 +288,6 @@ function contentCleanup(content, domain) {
 }*/
 
 module.exports = {
-    Asset: Asset,
-    convertMimeType: convertMimeType
+  Asset: Asset,
+  convertMimeType: convertMimeType
 };

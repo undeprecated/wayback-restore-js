@@ -50,7 +50,8 @@ var restore = Wayback.restore({
   //from: "20150801040409",
   //to: "20150801040409",
 
-  concurrency: 10,
+  concurrency: 1,
+  //max_pages: 100,
   links: true
 });
 restore

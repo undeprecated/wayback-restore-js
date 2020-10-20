@@ -12,64 +12,67 @@ var { Process } = require("./process");
 
 /**
  * This is the main restore process of a Wayback Machine archive.
- *
- * @param  {[type]} url  An archive url to restore.
- * @return {[type]}      [description]
  */
 function restore(settings) {
-    const defaults = {
-        timestamp: "",
-        url: "",
-        domain: "",
-        directory: "restore", // base directory
+  const defaults = {
+    timestamp: "",
+    url: "",
+    domain: "",
+    directory: "restore", // base directory
+    max_pages: -1, //(unlimited)
+    links: true, // restore links
+    assets: true, // restore assets
+    concurrency: settings.concurrency || 1,
+    log: false,
+    logFile: "restore.log"
+  };
 
-        // @TODO implement max number of pages to restore
-        // max_pages: null, (unlimited)
+  if (typeof settings === "string") {
+    let url = settings;
+    settings = {};
+    settings.url = url;
+  }
 
-        links: true, // restore links
-        assets: true, // restore assets
-        log: false,
-        logFile: "restore.log",
-        concurrency: settings.concurrency || 1
-    };
+  settings = Object.assign(defaults, settings);
 
-    if (typeof settings === "string") {
-        let url = settings;
-        settings = {};
-        settings.url = url;
-    }
+  if (settings.url !== "") {
+    const { domain, timestamp } = parse.parse(settings.url);
+    settings.domain = domain;
+    settings.timestamp = timestamp;
+  } else if (settings.domain !== "" && settings.timestamp !== "") {
+    settings.url = `https://web.archive.org/web/${settings.timestamp}/http://${settings.domain}`;
+  } else {
+    throw "Invalid settings";
+  }
 
-    settings = Object.assign(defaults, settings);
-
-    if (settings.url !== "") {
-        const { domain, timestamp } = parse.parse(settings.url);
-        settings.domain = domain;
-        settings.timestamp = timestamp;
-    } else if (settings.domain !== "" && settings.timestamp !== "") {
-        settings.url = `https://web.archive.org/web/${
-            settings.timestamp
-        }/http://${settings.domain}`;
-    } else {
-        throw "Invalid settings";
-    }
-
-    return new Process(settings);
+  return new Process(settings);
 }
+/**
+ * @TODO: Restore based on Snapshots
+ * This method finds all CDX snapshots and restores based on the results.
+ *
+function restoreSnapshots(domain, to, from=null) {
+    var process = new Process(settings);
+    process.start = () => {
+      await this.fetchCdx({
+        url: this.settings.domain + "*",
+        filter: "statuscode:200",
+        collapse: "timestamp:8,digest",
+        to: this.settings.timestamp
+      });
 
-// @TODO implement redirect
-/*
-Restore.prototype.writeRedirect = function(url, file) {
-    var redirect = '',
-        obj = path.parse(file);
+      this.q = async.queue((asset, callback) => {
+        this.restoreAsset(asset, callback);
+      }, this.settings.concurrency);
 
-    if (this.options.redirect.type === 'htaccess') {
-        redirect = Redirects.htaccess(url, this.options.redirect.to);
-        this.saveToFileDir(redirect, obj.dir + '/.htacces');
-    } else if (this.options.redirect.type === 'php') {
-        redirect = Redirects.php(this.options.redirect.to);
-        this.saveToFileDir(redirect, obj.dir + '/index.php');
-    }
-};
-*/
+      this.q.drain = async () => {
+        return await process.complete();
+      };
+
+      this.db.cdx.forEach((asset, keys) => {
+        this.q.push(asset);
+      });
+  }
+}*/
 
 module.exports = restore;
