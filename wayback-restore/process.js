@@ -370,7 +370,7 @@ Process.prototype.restoreFailed = function(error, asset) {
 Process.prototype.maxPagesReached = function() {
   return (
     this.settings.max_pages > 0 &&
-    this.results.restored_count === this.settings.max_pages
+    this.results.restored_count >= this.settings.max_pages
   );
 };
 

@@ -19,7 +19,7 @@ function restore(settings) {
     url: "",
     domain: "",
     directory: "restore", // base directory
-    max_pages: -1, //(unlimited)
+    max_pages: null, // leave empty for null
     links: true, // restore links
     assets: true, // restore assets
     concurrency: settings.concurrency || 1,
