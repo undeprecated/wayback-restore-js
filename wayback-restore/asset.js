@@ -80,7 +80,8 @@ Asset.prototype.fetch = async function(url) {
 
   try {
     var content = await http.get(url);
-    return Buffer.from(new Uint8Array(content));
+    return content;
+    //return Buffer.from(new Uint8Array(content));
 
     /*if (
       me.type === "json" ||
@@ -93,47 +94,6 @@ Asset.prototype.fetch = async function(url) {
     } else {
       return content;
   }*/
-
-    /*me.content = await http.get(url);
-
-        //me.content = Buffer.from(new Uint8Array(me.content));
-        //me.content = Buffer.from(await http.get(url));
-
-        if (me.type === "xml") {
-            me.content = Buffer.from(new Uint8Array(me.content));
-            return true;
-        }
-
-        if (me.type === "json") {
-            me.content = Buffer.from(new Uint8Array(me.content));
-            return true;
-        }
-
-        if (me.type === "text" || me.type === "css" || me.type === "script") {
-            me.content = Buffer.from(new Uint8Array(me.content));
-            //me.content = me.content.toString("utf8");
-
-            try {
-                var $ = cheerio.load(me.content);
-                if (me.type === "text") {
-                    me.content = $.html();
-                }
-                if (me.type === "css" || me.type === "script") {
-                    me.content = $.text();
-                }
-
-                me.links = me.extractLinks($);
-                me.assets = me.extractAssets($);
-                me.content = contentCleanup(me.content, me.domain);
-
-                flag = true;
-            } catch (err) {
-                debug(err);
-            }
-        }
-
-        //return me.content;
-        return flag;*/
   } catch (err) {
     debug(err);
   }
@@ -184,48 +144,20 @@ Asset.prototype.extractAssets = function($) {
 
 Asset.prototype.extractLinks = function($) {
   var me = this;
-  //var domain = this.domain;
 
   var links = [];
 
   // get all hrefs
   $("a[href]").each(function(index, a) {
     var href = $(a).attr("href");
-    /*
-        // remove archive
-        href = rewriteLink(domain, href);
-
-        var re = new RegExp("^(http[s:])?[//w.]*" + domain, "i");
-        if (re.test(href)) {
-            href = Url.makeRelative(href);
-        }*/
 
     if (filter(href)) {
-      // rewrites hrefs
-      //$(a).attr("href", "test");
-      //href = Url.makeRelative(href);
       links.push(href);
     }
   });
 
   return links;
 };
-
-/*
-Asset.prototype.downloadFile = async (url, path) => {
-    const res = await fetch(url);
-    const fileStream = fs.createWriteStream(path);
-    await new Promise((resolve, reject) => {
-        res.body.pipe(fileStream);
-        res.body.on("error", err => {
-            reject(err);
-        });
-        fileStream.on("finish", function() {
-            resolve();
-        });
-    });
-};
-*/
 
 function filter(link) {
   if (

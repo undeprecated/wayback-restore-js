@@ -10,54 +10,31 @@ var debug = require("debug")("wayback:http");
 
 var fs = require("fs");
 var https = require("https");
-var axios = require("axios");
+var fetch = require("node-fetch");
 
-var session = axios.create({
-  //keepAlive pools and reuses TCP connections, so it's faster
-  httpsAgent: new https.Agent({
-    maxSockets: 5,
-    keepAlive: true
-  }),
-
-  //follow up to 10 HTTP 3xx redirects
-  maxRedirects: 10
-
-  //cap the maximum content length we'll accept to 50MBs, just in case
-  //maxContentLength: 50 * 1000 * 1000
-
-  /*proxy: {
-    host: '127.0.0.1',
-    port: 9000,
-    auth: {
-      username: 'mikeymike',
-      password: 'rapunz3l'
-    }
-  }*/
+const httpsAgent = new https.Agent({
+  maxSockets: 5,
+  keepAlive: true
 });
 
 async function get(url) {
-  //const response = await session.get( url, { responseType: 'arraybuffer' } );
-  //return response.data;
-
-  return session
-    .get(url, { responseType: "arraybuffer" })
-    .then(function(response) {
-      return response.data;
-    })
-    .catch(function(err) {
-      debug(err);
-      return err;
-    });
+  const response = await fetch(url, {
+    method: "GET",
+    agent: httpsAgent
+  });
+  const buffer = await response.buffer();
+  return Buffer.from(new Uint8Array(buffer));
 }
 
 async function download(url, path) {
-  const writer = fs.createWriteStream(path);
-
-  const response = await session.get(url, {
-    responseType: "stream"
+  const response = await fetch(url, {
+    method: "GET",
+    agent: httpsAgent
   });
 
-  response.data.pipe(writer);
+  const writer = fs.createWriteStream(path);
+
+  response.body.pipe(writer);
 
   return new Promise((resolve, reject) => {
     writer.on("finish", resolve);
@@ -66,12 +43,6 @@ async function download(url, path) {
 }
 
 module.exports = {
-  session: session,
   get: get,
-  download: download,
-  close: function() {
-    if (session.httpsAgent) {
-      session.httpsAgent.destroy();
-    }
-  }
+  download: download
 };
