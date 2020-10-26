@@ -124,7 +124,7 @@ Process.prototype.start = async function() {
   try {
     await this.fetchCdx();
   } catch (e) {
-    console.log("error", e);
+    this.emit(EVENTS.ERROR, e);
   }
 
   /**
@@ -364,6 +364,7 @@ Process.prototype.restoreFailed = function(error, asset) {
   this.results.failed_count++;
   this.db.restored[asset.key] = RESTORE_STATUS.FAILD;
   this.emit(RESTORE_STATUS.FAILED, asset);
+  this.emit(EVENTS.ERROR, error);
   return asset;
 };
 

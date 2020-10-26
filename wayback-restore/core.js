@@ -18,6 +18,7 @@ module.exports = {
     RESTORED: "restored",
     COMPLETED: "completed",
     FAILED: "failed",
-    CDXQUERY: "cdxquery"
+    CDXQUERY: "cdxquery",
+    ERROR: "error"
   }
 };
