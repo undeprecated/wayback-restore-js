@@ -153,7 +153,3 @@ var restore = Wayback.restore({
 ```JavaScript
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://example.com');
 ```
-
-## Looking for a GUI tool?
-
-Try [Restorizor](https://www.restorizor.com).
