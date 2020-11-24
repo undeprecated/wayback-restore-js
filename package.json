@@ -9,13 +9,12 @@
     "restore": "DEBUG=wayback:* node restore"
   },
   "author": "Nick Curry",
-  "license": "Unlicense",
-  "private": true,
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://cnick79@bitbucket.org/cnick79/websiterestore-js.git"
+    "url": "git+https://github.com/undeprecated/wayback-restore-js"
   },
-  "homepage": "https://bitbucket.org/cnick79/websiterestore-js#readme",
+  "homepage": "https://github.com/undeprecated/wayback-restore-js",
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
@@ -36,12 +35,10 @@
   },
   "dependencies": {
     "async": "^2.6.3",
-    "axios": "^0.18.1",
     "cheerio": "^1.0.0-rc.3",
     "event-stream": "^3.3.2",
     "fs-extra": "^7.0.0",
     "mime-types": "^2.1.27",
-    "node-fetch": "^2.6.1",
     "parse-domain": "^0.2.1",
     "request": "^2.88.0"
   }
