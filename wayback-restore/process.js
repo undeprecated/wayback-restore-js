@@ -87,8 +87,7 @@ function Process(settings) {
     ended: "",
     runtime_hms: "",
     restored_count: 0,
-    failed_count: 0,
-    first_file: ""
+    failed_count: 0
   };
 }
 
