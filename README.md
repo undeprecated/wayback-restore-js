@@ -2,7 +2,7 @@
 
 > A website restoration tool written for Node Js.
 
-This package allows you to restore a website from web.archive.org. It was developed for Node JS
+This package allows you to restore a website from web.archive.org. It was developed for Node JS and can be used in any Electron application.
 
 ## Install
 
@@ -161,3 +161,11 @@ var restore = Wayback.restore({
 ```JavaScript
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://example.com');
 ```
+
+## TODO
+
+- Create a CLI. Maybe as a separate module?
+
+## Need a GUI Application?
+
+Checkout [Restorizor](https://www.restorizor.com) a Wayback Machine download application built using Electron and powered by this very same wayback-restore.js module.
