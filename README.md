@@ -24,49 +24,49 @@ Wayback.restore(options);
 
 #### options
 
-##### url
+##### url - string
 
 URL to restore. Ex. https://web.archive.org/web/20150801040409/http://example.com/
 
 If you use `url` then you do not need to use `timestamp` and `domain`.
 
-##### timestamp
+##### timestamp - string
 
 Timestamp to restore.
 
 Ex. 20150801040409
 
-##### domain
+##### domain - string
 
 Domain to restore
 
-##### directory
+##### directory - string
 
 (Default: restore) Directory to output into.
 
-##### max_pages:
+##### max_pages - integer
 
 (default: no limit), Maximum number of pages to download. Leave empty for no limit.
 
-##### links
+##### links - boolean
 
 (default: true) Set to true to download links found on the page.
 
-##### assets
+##### assets - boolean
 
 (default: true) Set to true to download CSS, JS, images.
 
-##### concurrency
+##### concurrency - integer
 
 (default: 1): Number of downloads to process at once.
 
 **_Warning: Setting this value too high might get you blocked from web.archive.org._**
 
-##### log
+##### log - boolean
 
 (default: false) Set to true to enable logging to a log file.
 
-##### logFile
+##### logFile - string
 
 (default: restore.log) Name of the log file to write. It will be written to `options.directory`.
 
@@ -84,7 +84,7 @@ Domain to restore
 
 The following events are emitted.
 
-##### start
+##### start(callback)
 
 Fired when restoring starts.
 
@@ -142,6 +142,71 @@ When the restore process has completed.
 })
 ```
 
+### downloader(options)
+
+#### options
+
+##### url - string
+
+A snapshot URL to download.
+
+```JavaScript
+Wayback.download({
+    url: 'http://web.archive.org/web/20150531/http://www.example.com'
+});
+```
+
+##### domain - string
+
+A domain to download from.
+
+##### from - string
+
+Only files on or after timestamp supplied (ie. 20150801231334).
+
+Can also be 20150801
+
+##### to - string
+
+Only files on or before timestamp supplied (ie. 20150801231334).
+
+Can also be 20150801
+
+##### limit - integer (default: 0)
+
+limit number of files to download.
+
+0 = no limit.
+
+##### exact_url - boolean (default: false)
+
+Downloads only the url provided not full site.
+
+##### list - boolean (default: false)
+
+Doesn't download any files.
+
+##### concurrency - integer (default: 1)
+
+Number of files to download at the same time.
+
+##### only - string|RegEx (defalt: '')
+    
+Only include files matching this filter.
+
+##### exclude - string|RegEx (defalt: '')
+    
+Excludes files matching this filter.
+
+##### directory - string (defalt: '.')
+
+Directory to output into.
+
+#### Methods
+
+See Wayback.restore methods.
+
+
 ## Examples
 
 ```JavaScript
@@ -162,8 +227,30 @@ var restore = Wayback.restore({
 var restore = Wayback.restore('http://web.archive.org/web/20150531/http://example.com');
 ```
 
+
+```JavaScript
+Wayback.downloader({
+  url: 'https://trufish.org/',
+  from: '20181001',
+  to: '20201031',
+  list: true,
+  concurrency: 10,
+  exact_url: false,
+  exclude: /.(gif|jpg|jpeg|png|svg)$/i
+})
+  .on('completed', function (results) {
+    console.log('completed');
+    console.log(results);
+  })
+  .start((record) => {
+    console.log('Asset', record.getSnapshotUrl());
+  });
+```
+
 ## TODO
 
+- Improve documentation
+- Improve this modules API
 - Create a CLI. Maybe as a separate module?
 
 ## Need a GUI Application?

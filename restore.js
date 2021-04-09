@@ -27,6 +27,7 @@ var Wayback = require('./wayback-restore');
 // @NOTE: This is not a valid URL and does not restore
 //const url = "https://web.archive.org/web/20181029143918/trufish.org",
 
+/*
 Wayback.restore({
   url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk'
 });
@@ -70,6 +71,7 @@ Wayback.restore({
     console.log('Snapshots Found: ', cdx.size);
   })
   .start();
+*/
 
 /**
  * Downloader Examples.
@@ -79,6 +81,7 @@ Wayback.downloader({
   from: '20181001',
   to: '20201031',
   list: false,
+  limit: 8,
   concurrency: 10,
   exact_url: false,
   //only: 'https://trufish.org/wp-content/themes/aspire-pro/images/bg-1.jpg',

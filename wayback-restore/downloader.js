@@ -104,6 +104,7 @@ function Process(options) {
     started: '',
     ended: '',
     runtime_hms: '',
+    file_count: 0,
     restored_count: 0,
     failed_count: 0,
     options: this.options
@@ -154,6 +155,7 @@ Process.prototype.start = async function (callback) {
     if (!this.options.list) {
       await this.restoreAsset(asset);
     }
+
     callback(asset);
     cb();
   }, this.options.concurrency);
@@ -184,7 +186,10 @@ Process.prototype.list = async function (callback) {
         es.map((record, next) => {
           record = JSON.parse(record);
 
-          if (this.match_exclude_filter(record.original)) {
+          if (this.maxPagesReached()) {
+            next();
+            return;
+          } else if (this.match_exclude_filter(record.original)) {
             debug('Asset excluded:', record);
             next();
           } else if (!this.match_only_filter(record.original)) {
@@ -211,6 +216,8 @@ Process.prototype.list = async function (callback) {
             if (callback) {
               callback(asset);
             }
+
+            this.results.file_count++;
 
             next(null, record);
           }
@@ -293,7 +300,7 @@ Process.prototype.restoreFailed = function (error, asset) {
 };
 
 Process.prototype.maxPagesReached = function () {
-  return this.options.max_pages > 0 && this.results.restored_count >= this.options.max_pages;
+  return this.options.limit > 0 && this.results.file_count >= this.options.limit;
 };
 
 /**
