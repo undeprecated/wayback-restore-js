@@ -14,6 +14,14 @@
     "type": "git",
     "url": "git+https://github.com/undeprecated/wayback-restore-js"
   },
+  "keywords": [
+    "wayback archive",
+    "wayback machine",
+    "web.archive.org",
+    "downloader",
+    "rebuilder",
+    "internet archive"
+  ],
   "homepage": "https://github.com/undeprecated/wayback-restore-js",
   "devDependencies": {
     "@babel/core": "^7.6.4",
