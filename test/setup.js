@@ -1,11 +1,7 @@
-var assert = require( "chai" ).assert;
-var expect = require( "chai" ).expect;
-
-var Wayback = require( "../" );
-var process = require( "../wayback-restore/process" );
+var assert = require("chai").assert;
+var expect = require("chai").expect;
 
 module.exports = {
     assert: assert,
-    expect: expect,
-    process: process
+    expect: expect
 };

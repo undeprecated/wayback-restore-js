@@ -1,7 +1,9 @@
 module.exports = {
-  VERSION: "0.0.1",
+  VERSION: "0.0.2",
   ARCHIVE_SOURCE: "http://web.archive.org",
   ARCHIVE_TEMPLATE: "https://web.archive.org/web/",
+  ARCHIVE_SOURCE_RE: new RegExp("http://web.archive.org", "i"),
+  ARCHIVE_TEMPLATE_RE: new RegExp("https://web.archive.org/web/", "i"),
   RESTORE_STATUS: {
     RESTORED: "restored",
     FAILED: "failed",

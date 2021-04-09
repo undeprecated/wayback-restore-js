@@ -16,8 +16,7 @@ var CDX_SERVER = "https://web.archive.org/cdx/search/cdx";
 
 function Query(config) {
   this.url = "";
-  this.options = Object.assign(
-    {
+  this.options = Object.assign({
       url: "",
       fl: [
         FIELDS.URLKEY,
@@ -43,7 +42,7 @@ function Query(config) {
   this.__init__();
 }
 
-Query.prototype.__init__ = function() {
+Query.prototype.__init__ = function () {
   var querystring = [];
 
   for (var key in this.options) {
@@ -68,8 +67,10 @@ Query.prototype.__init__ = function() {
  *
  * @return JSON string
  */
-Query.prototype.stream = function() {
-  var arrayTransform = new ArrayTransform({ objectMode: true });
+Query.prototype.stream = function () {
+  var arrayTransform = new ArrayTransform({
+    objectMode: true
+  });
 
   var jsonTransform = new JsonTransform({
     objectMode: true,
@@ -81,6 +82,4 @@ Query.prototype.stream = function() {
     .pipe(jsonTransform);
 };
 
-module.exports = {
-  Query: Query
-};
+module.exports = Query;

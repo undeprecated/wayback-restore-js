@@ -1,6 +1,6 @@
 {
   "name": "wayback-restore",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Website restoration tool written for Node Js.",
   "main": "wayback-restore/index.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "grunt-contrib-watch": "^1.1.0",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^5.2.0",
+    "prettier": "^2.2.1",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9"
   },

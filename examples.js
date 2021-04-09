@@ -1,32 +1,12 @@
-/**
- * This file only exists for testing restore/downloader processes by executing
- * `npm run restore`.
- *
- * @TODO: replace this with a CLI utility.
- */
-
 var Wayback = require('./wayback-restore');
 
 /**
- * Test URLS
- */
-//const url = "https://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk",
-//const url = 'https://web.archive.org/web/20170204050649/http://www.androidfantasy.com/',
-//const url = "https://web.archive.org/web/20150801040409/http://acbaw.com/",
-//const url = "http://web.archive.org/web/20091125054126/http://www.ulcinjtoday.com/",
-//const url = "https://web.archive.org/web/20190114224925/http://www.tennisballmachinereviews.org/",
-//const url = "https://web.archive.org/web/20200602050304/https://www.fancytextguru.com/",
-//const url = "https://web.archive.org/web/20190424225217/http://remont-k.com/",
-//const url = "https://web.archive.org/web/20181029143918/https://trufish.org/";
-//const url = "https://web.archive.org/web/20150424013550/http://www.kbect.com/",
-//const url = "https://web.archive.org/web/20170923120200/http://careersters.net/",
-//const url ="https://web.archive.org/web/20160404213504/http://claridadesdemichoacan.com",
-
-// @TODO: this doesn't not work because it's an IP
-//const url = "https://web.archive.org/web/20200612100421/http://198.96.92.14/",
-// @NOTE: This is not a valid URL and does not restore
-//const url = "https://web.archive.org/web/20181029143918/trufish.org",
-
+ * Restore Examples.
+ *
+ * Wayback.restore will restore a website as it appears on web.archive.org and will only include
+ * files that are used on the page ie. JS, CSS, images, and links to other pages that have
+ * been archived.
+ **/
 Wayback.restore({
   url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk'
 });
@@ -73,15 +53,16 @@ Wayback.restore({
 
 /**
  * Downloader Examples.
+ *
+ * Wayback.downloader downloads snapshots of files based on the options you set to download.
  */
 Wayback.downloader({
   url: 'https://trufish.org/',
   from: '20181001',
   to: '20201031',
-  list: false,
+  list: true,
   concurrency: 10,
   exact_url: false,
-  //only: 'https://trufish.org/wp-content/themes/aspire-pro/images/bg-1.jpg',
   exclude: /.(gif|jpg|jpeg|png|svg)$/i
 })
   .on('completed', function (results) {

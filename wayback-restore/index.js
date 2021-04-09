@@ -8,16 +8,18 @@
  *
  */
 
-var restore = require("./restore");
-var cdx = require("./cdx");
+var Restore = require("./restore");
+var Downloader = require("./downloader");
+var query = require("./cdx/query");
 var core = require("./core");
-var parse = require("./parse");
 
 module.exports = {
   VERSION: core.VERSION,
-  restore: restore,
-  cdx: cdx,
-  parse: parse.parse,
-  parseDomain: parse.parseDomain,
-  parseTimestamp: parse.parseTimestamp
+  restore: (options) => {
+    return new Restore(options);
+  },
+  downloader: (options) => {
+    return new Downloader(options);
+  },
+  cdx: query
 };

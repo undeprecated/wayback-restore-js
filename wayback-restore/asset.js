@@ -8,10 +8,11 @@
 var debug = require("debug")("wayback:asset");
 var fs = require("fs-extra");
 var path = require("path");
+var mime = require("mime-types");
 
 // Local Modules
 var core = require("./core");
-var helpers = require("./helpers");
+var utils = require("./utils");
 var http = require("./http");
 
 //var cheerio = require("cheerio");
@@ -40,7 +41,7 @@ function Asset() {
   this.type = "";
 }
 
-Asset.prototype.getSnapshotUrl = function(raw) {
+Asset.prototype.getSnapshotUrl = function (raw) {
   var timestamp = this.timestamp;
   var url = this.original_url;
   var flag = raw ? "id_" : "";
@@ -48,23 +49,23 @@ Asset.prototype.getSnapshotUrl = function(raw) {
   return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
 };
 
-Asset.prototype.clear = function() {
+Asset.prototype.clear = function () {
   this.content = null;
 };
 
-Asset.prototype.isRestored = function() {
+Asset.prototype.isRestored = function () {
   return this.status === RESTORE_STATUS.RESTORED;
 };
 
-Asset.prototype.setRestored = function() {
+Asset.prototype.setRestored = function () {
   this.status = RESTORE_STATUS.RESTORED;
 };
 
-Asset.prototype.setFailed = function() {
+Asset.prototype.setFailed = function () {
   this.status = RESTORE_STATUS.FAILED;
 };
 
-Asset.prototype.setRestoring = function() {
+Asset.prototype.setRestoring = function () {
   this.status = RESTORE_STATUS.RESTORING;
 };
 
@@ -74,26 +75,11 @@ Asset.prototype.setRestoring = function() {
  * @param {String} url - A url to restore
  * @param {mix} The restored content
  */
-Asset.prototype.fetch = async function(url) {
-  var me = this;
-  var flag = false;
-
+Asset.prototype.fetch = async function (url) {
   try {
     var content = await http.get(url);
     return content;
-    //return Buffer.from(new Uint8Array(content));
 
-    /*if (
-      me.type === "json" ||
-      me.type === "xml" ||
-      me.type === "text" ||
-      me.type === "css" ||
-      me.type === "script"
-    ) {
-      return Buffer.from(new Uint8Array(content));
-    } else {
-      return content;
-  }*/
   } catch (err) {
     debug(err);
   }
@@ -105,7 +91,7 @@ Asset.prototype.fetch = async function(url) {
  * Download streams content directly to a local file.
  * @param  {String} path - Local file path to save to.
  */
-Asset.prototype.download = async function(file_path) {
+Asset.prototype.download = async function (file_path) {
   var snapshot = this.getSnapshotUrl(true);
   await fs.ensureDir(path.dirname(file_path));
   await http.download(snapshot, file_path);
@@ -119,36 +105,35 @@ Asset.prototype.download = async function(file_path) {
  * @param page {RestorePage} The object to find more links to restore.
  * @return {Array}  Links found
  */
-Asset.prototype.extractAssets = function($) {
-  var me = this;
+Asset.prototype.extractAssets = function ($) {
   var assets = [];
   //assets = [];
 
-  $("[src], link[href]").each(function(index, link) {
+  $("[src], link[href]").each(function (index, link) {
     var src = $(link).attr("src");
 
     if (src) {
       assets.push(src);
-      $(link).attr("src", helpers.makeRelative(src));
+      $(link).attr("src", utils.makeRelative(src));
     }
 
     var href = $(link).attr("href");
     if (href) {
       assets.push(href);
-      $(link).attr("href", helpers.makeRelative(href));
+      $(link).attr("href", utils.makeRelative(href));
     }
   });
 
   return assets;
 };
 
-Asset.prototype.extractLinks = function($) {
+Asset.prototype.extractLinks = function ($) {
   var me = this;
 
   var links = [];
 
   // get all hrefs
-  $("a[href]").each(function(index, a) {
+  $("a[href]").each(function (index, a) {
     var href = $(a).attr("href");
 
     if (filter(href)) {
@@ -158,6 +143,34 @@ Asset.prototype.extractLinks = function($) {
 
   return links;
 };
+
+/**
+ * Converts a URL to a local file path and name
+ */
+Asset.prototype.localFilePath = function () {
+  var url = this.original_url;
+  var ext = mime.extension(this.mimetype);
+
+  var obj = path.parse(utils.makeRelative(url));
+
+  var dir = obj.dir;
+  var filename = obj.name !== "" ? obj.name : "index";
+  //var ext = obj.ext !== "" ? obj.ext : ".html";
+
+  dir = dir.replace(/^\//, ""); // remove leading slash
+  dir = dir.replace(/\/$/, ""); // remove trailing slash
+
+  /**
+   * converts permalinks that are "folders" with no extension to an html page
+   * Example: http://example.com/test to text/index.html
+   */
+  if (obj.name && obj.ext === "" && ext === "html") {
+    return path.join(dir, filename, "index." + ext);
+  }
+
+  return path.join(dir, filename + "." + ext);
+};
+
 
 function filter(link) {
   if (
