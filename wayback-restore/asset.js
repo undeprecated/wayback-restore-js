@@ -5,15 +5,15 @@
  * A base class for creating different types of restoration objects to restore
  * based on the mime type.
  */
-var debug = require("debug")("wayback:asset");
-var fs = require("fs-extra");
-var path = require("path");
-var mime = require("mime-types");
+var debug = require('debug')('wayback:asset');
+var fs = require('fs-extra');
+var path = require('path');
+var mime = require('mime-types');
 
 // Local Modules
-var core = require("./core");
-var utils = require("./utils");
-var http = require("./http");
+var core = require('./core');
+var utils = require('./utils');
+var http = require('./http');
 
 //var cheerio = require("cheerio");
 
@@ -25,26 +25,31 @@ function Asset() {
   this.key = null;
 
   // the url to restore
-  this.original_url = "";
+  this.original_url = '';
 
   // path to local file
-  this.restored_file = "";
+  this.restored_file = '';
 
-  this.timestamp = "";
+  this.timestamp = '';
 
   // restored | failed | unarchived
   this.status = RESTORE_STATUS.EMPTY;
 
   // mimetype: html, image, css, js, based on wayback types
-  this.mimetype = "";
+  this.mimetype = '';
 
-  this.type = "";
+  this.type = '';
 }
 
+/**
+ *
+ * @param {boolean} raw - set to true will not include Wayback JS
+ * @returns {string} snapshot URL
+ */
 Asset.prototype.getSnapshotUrl = function (raw) {
   var timestamp = this.timestamp;
   var url = this.original_url;
-  var flag = raw ? "id_" : "";
+  var flag = raw ? 'id_' : '';
 
   return ARCHIVE_TEMPLATE + `${timestamp}${flag}/${url}`;
 };
@@ -79,12 +84,11 @@ Asset.prototype.fetch = async function (url) {
   try {
     var content = await http.get(url);
     return content;
-
   } catch (err) {
     debug(err);
   }
 
-  return "";
+  return '';
 };
 
 /**
@@ -109,18 +113,18 @@ Asset.prototype.extractAssets = function ($) {
   var assets = [];
   //assets = [];
 
-  $("[src], link[href]").each(function (index, link) {
-    var src = $(link).attr("src");
+  $('[src], link[href]').each(function (index, link) {
+    var src = $(link).attr('src');
 
     if (src) {
       assets.push(src);
-      $(link).attr("src", utils.makeRelative(src));
+      $(link).attr('src', utils.makeRelative(src));
     }
 
-    var href = $(link).attr("href");
+    var href = $(link).attr('href');
     if (href) {
       assets.push(href);
-      $(link).attr("href", utils.makeRelative(href));
+      $(link).attr('href', utils.makeRelative(href));
     }
   });
 
@@ -133,8 +137,8 @@ Asset.prototype.extractLinks = function ($) {
   var links = [];
 
   // get all hrefs
-  $("a[href]").each(function (index, a) {
-    var href = $(a).attr("href");
+  $('a[href]').each(function (index, a) {
+    var href = $(a).attr('href');
 
     if (filter(href)) {
       links.push(href);
@@ -154,23 +158,22 @@ Asset.prototype.localFilePath = function () {
   var obj = path.parse(utils.makeRelative(url));
 
   var dir = obj.dir;
-  var filename = obj.name !== "" ? obj.name : "index";
+  var filename = obj.name !== '' ? obj.name : 'index';
   //var ext = obj.ext !== "" ? obj.ext : ".html";
 
-  dir = dir.replace(/^\//, ""); // remove leading slash
-  dir = dir.replace(/\/$/, ""); // remove trailing slash
+  dir = dir.replace(/^\//, ''); // remove leading slash
+  dir = dir.replace(/\/$/, ''); // remove trailing slash
 
   /**
    * converts permalinks that are "folders" with no extension to an html page
    * Example: http://example.com/test to text/index.html
    */
-  if (obj.name && obj.ext === "" && ext === "html") {
-    return path.join(dir, filename, "index." + ext);
+  if (obj.name && obj.ext === '' && ext === 'html') {
+    return path.join(dir, filename, 'index.' + ext);
   }
 
-  return path.join(dir, filename + "." + ext);
+  return path.join(dir, filename + '.' + ext);
 };
-
 
 function filter(link) {
   if (
@@ -197,23 +200,23 @@ function filter(link) {
  */
 function convertMimeType(type) {
   if (type.match(/^text\/css/i)) {
-    return "css";
+    return 'css';
   } else if (type.match(/^text\//i)) {
-    return "text";
+    return 'text';
   } else if (type.match(/^image\//i)) {
-    return "image";
+    return 'image';
   } else if (type.match(/^video\//i)) {
-    return "video";
+    return 'video';
   } else if (type.match(/^audio\//i)) {
-    return "audio";
+    return 'audio';
   } else if (type.match(/javascript/i)) {
-    return "script";
+    return 'script';
   } else if (type.match(/xml/i)) {
-    return "xml";
-  } else if (type === "application/json") {
-    return "json";
+    return 'xml';
+  } else if (type === 'application/json') {
+    return 'json';
   } else {
-    return "other";
+    return 'other';
   }
 }
 

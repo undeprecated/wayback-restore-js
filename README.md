@@ -206,6 +206,35 @@ Directory to output into.
 
 See Wayback.restore methods.
 
+### Asset object
+
+An `Asset` is an object that gets downloaded or restured and is returned by various events.
+
+#### Asset.properties
+
+  // CDX urlkey
+  this.key = null;
+
+  // the url to restore
+  this.original_url = "";
+
+  // path to local file
+  this.restored_file = "";
+
+  this.timestamp = "";
+
+  // restored | failed | unarchived
+  this.status = RESTORE_STATUS.EMPTY;
+
+  // mimetype: html, image, css, js, based on wayback types
+  this.mimetype = "";
+
+#### Asset.methods
+
+##### Asset.getSnapShot(flag)
+
+Set to `true` to fetch file in its original state, without any processing by the Wayback Machine or waybackpack. You will likely want this to always be `true`.
+
 
 ## Examples
 
@@ -242,8 +271,8 @@ Wayback.downloader({
     console.log('completed');
     console.log(results);
   })
-  .start((record) => {
-    console.log('Asset', record.getSnapshotUrl());
+  .start((asset) => {
+    console.log('Asset', asset.getSnapshotUrl());
   });
 ```
 
