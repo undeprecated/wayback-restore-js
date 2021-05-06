@@ -206,7 +206,7 @@ Directory to output into.
 
 See Wayback.restore methods.
 
-### Asset object
+### Asset (object)
 
 An `Asset` is an object that gets downloaded or restured and is returned by various events.
 

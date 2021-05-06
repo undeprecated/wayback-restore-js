@@ -1,6 +1,6 @@
 {
   "name": "wayback-restore",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Website restoration tool written for Node Js.",
   "main": "wayback-restore/index.js",
   "scripts": {
@@ -21,6 +21,10 @@
     "downloader",
     "rebuilder",
     "internet archive"
+  ],
+  "files": [
+    "README.md",
+    "wayback-restore/"
   ],
   "homepage": "https://github.com/undeprecated/wayback-restore-js",
   "devDependencies": {
