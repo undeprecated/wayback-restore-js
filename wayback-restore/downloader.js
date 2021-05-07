@@ -164,68 +164,84 @@ Process.prototype.start = async function (callback) {
     return await this.complete();
   };
 
-  /**
-   * This method finds all CDX snapshots and restores based on the results.
-   */
+  // This method finds all CDX snapshots and restores based on the results.
   await this.list();
-  /*await this.list((asset) => {
-    if (asset) {
-      this.q.push(asset);
-    }
-  });*/
+
+  // complete event will never fire if nothing goes into the queue
+  if (this.results.file_count === 0) {
+    this.complete();
+  }
 
   return this;
 };
 
-Process.prototype.list = async function (callback) {
-  try {
-    return await this.cdxQuery
-      .stream()
-      .on('end', () => {})
-      .pipe(
-        es.map((record, next) => {
-          record = JSON.parse(record);
-
-          if (this.maxPagesReached()) {
-            next();
-            return;
-          } else if (this.match_exclude_filter(record.original)) {
-            debug('Asset excluded:', record);
-            next();
-          } else if (!this.match_only_filter(record.original)) {
-            debug('Asset filtered out:', record);
-            next();
-          } else {
-            const asset = new Asset.Asset();
-
-            asset.key = record.urlkey;
-            asset.original_url = record.original;
-            asset.timestamp = record.timestamp;
-            asset.mimetype = record.mimetype;
-            asset.type = Asset.convertMimeType(record.mimetype);
-
-            this.emit(EVENT.CDXQUERY, asset);
-
-            debug('Listing:', asset);
-
-            // @NOTE: this.q does not exist if list() is invoked and not start
-            if (this.q) {
-              this.q.push(asset);
-            }
-
-            if (callback) {
-              callback(asset);
-            }
-
-            this.results.file_count++;
-
-            next(null, record);
-          }
+Process.prototype.list = function (callback) {
+  let num_files = 0;
+  return new Promise((resolve, reject) => {
+    try {
+      this.cdxQuery
+        .stream()
+        .on('end', () => {
+          resolve();
         })
-      );
-  } catch (e) {
-    console.error(e);
-  }
+        .pipe(
+          es.map((record, next) => {
+            record = JSON.parse(record);
+
+            if (this.maxPagesReached()) {
+              next();
+              //return;
+            } else if (this.match_exclude_filter(record.original)) {
+              debug('Asset excluded:', record);
+              next();
+            } else if (!this.match_only_filter(record.original)) {
+              debug('Asset filtered out:', record);
+              next();
+            } else {
+              const asset = new Asset.Asset();
+
+              asset.key = record.urlkey;
+              asset.original_url = record.original;
+              asset.timestamp = record.timestamp;
+              asset.mimetype = record.mimetype;
+              asset.type = Asset.convertMimeType(record.mimetype);
+
+              this.emit(EVENT.CDXQUERY, asset);
+
+              debug('Listing:', asset);
+
+              num_files++;
+              this.results.file_count++;
+
+              // @NOTE: this.q does not exist if list() is invoked and not start
+              //if (this.q) {
+              //  this.q.push(asset);
+              //}
+
+              if (callback) {
+                callback(asset);
+              }
+
+              next(null, record);
+            }
+          })
+        )
+        .pipe(
+          es.through(
+            (asset) => {
+              if (this.q) {
+                this.q.push(asset);
+              }
+            },
+            () => {
+              return num_files;
+            }
+          )
+        );
+    } catch (e) {
+      reject(e);
+    }
+  });
 };
 
 Process.prototype.match_exclude_filter = function (file_url) {

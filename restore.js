@@ -76,17 +76,30 @@ Wayback.restore({
 
 /**
  * Downloader Examples.
- *
+ */
+
 Wayback.downloader({
-  url: 'https://trufish.org/',
-  from: '20181001',
-  to: '20201031',
-  list: false,
-  limit: 8,
-  concurrency: 10,
-  exact_url: false,
+  concurrency: 5,
+  directory: '/home/nick/testrestore',
+  domain: 'trufish.org',
+  exclude: '',
+  from: '2017',
+  limit: 20,
+  notify_on_finish: true,
+  //only: '/.(gif|jpg|jpeg|png)$/i',
+  only: '.(gif|jpg|jpeg|png)$',
+  to: '2018',
+  list: true
+
+  //url: 'https://trufish.org/',
+  //from: '20181001',
+  //to: '20201031',
+  //list: false,
+  //limit: 8,
+  //concurrency: 10,
+  //exact_url: false,
   //only: 'https://trufish.org/wp-content/themes/aspire-pro/images/bg-1.jpg',
-  exclude: /.(gif|jpg|jpeg|png|svg)$/i
+  //exclude: /.(gif|jpg|jpeg|png|svg)$/i
 })
   .on('completed', function (results) {
     console.log('completed');
@@ -95,4 +108,3 @@ Wayback.downloader({
   .start((record) => {
     console.log('Asset', record.getSnapshotUrl());
   });
-*/

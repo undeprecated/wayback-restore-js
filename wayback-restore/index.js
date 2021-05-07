@@ -8,10 +8,10 @@
  *
  */
 
-var Restore = require("./restore");
-var Downloader = require("./downloader");
-var query = require("./cdx/query");
-var core = require("./core");
+var Restore = require('./restore');
+var Downloader = require('./downloader');
+var query = require('./cdx/query');
+var core = require('./core');
 
 module.exports = {
   VERSION: core.VERSION,
@@ -19,6 +19,9 @@ module.exports = {
     return new Restore(options);
   },
   downloader: (options) => {
+    return new Downloader(options);
+  },
+  download: (options) => {
     return new Downloader(options);
   },
   cdx: query
