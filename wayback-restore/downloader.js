@@ -222,7 +222,7 @@ Process.prototype.list = function (callback) {
                 callback(asset);
               }
 
-              next(null, record);
+              next(null, asset);
             }
           })
         )
@@ -261,13 +261,11 @@ Process.prototype.match_only_filter = function (file_url) {
 };
 
 Process.prototype.restoreAsset = async function (asset) {
-  debug('Restoring Asset: ', asset);
-  // Stores files as /restore-dir/domain.com/yyyymmddhhmmss/index.html
-  var local_file = path.join(this.restore_directory, asset.timestamp, asset.localFilePath());
-
-  this.setRestoring(asset);
-
   try {
+    // Stores files as /restore-dir/domain.com/yyyymmddhhmmss/index.html
+    var local_file = path.join(this.restore_directory, asset.timestamp, asset.localFilePath());
+
+    this.setRestoring(asset);
     await asset.download(local_file);
     this.setRestored(asset);
     return true;
@@ -316,7 +314,7 @@ Process.prototype.restoreFailed = function (error, asset) {
 };
 
 Process.prototype.maxPagesReached = function () {
-  return this.options.limit > 0 && this.results.file_count >= this.options.limit;
+  return this.options.limit > 0 && this.results.restored_count >= this.options.limit;
 };
 
 /**

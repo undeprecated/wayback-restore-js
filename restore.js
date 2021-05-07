@@ -39,10 +39,11 @@ Wayback.restore({
 
 Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 */
-/*
+
 Wayback.restore({
   directory: '~/testrestore/restores/',
-  url: 'https://web.archive.org/web/20150202214825/http://dollarseoclub.com/#!#',
+  url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
+  //  url: 'https://web.archive.org/web/20150202214825/http://dollarseoclub.com/#!#',
   concurrency: 1,
   max_pages: 50,
   links: true
@@ -72,12 +73,11 @@ Wayback.restore({
     console.log('Snapshots Found: ', cdx.size);
   })
   .start();
-*/
 
 /**
  * Downloader Examples.
  */
-
+/*
 Wayback.downloader({
   concurrency: 5,
   directory: '/home/nick/testrestore',
@@ -89,7 +89,7 @@ Wayback.downloader({
   //only: '/.(gif|jpg|jpeg|png)$/i',
   only: '.(gif|jpg|jpeg|png)$',
   to: '2018',
-  list: true
+  list: false
 
   //url: 'https://trufish.org/',
   //from: '20181001',
@@ -108,3 +108,4 @@ Wayback.downloader({
   .start((record) => {
     console.log('Asset', record.getSnapshotUrl());
   });
+*/
