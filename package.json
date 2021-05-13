@@ -1,6 +1,6 @@
 {
   "name": "wayback-restore",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Website restoration tool written for Node Js.",
   "main": "wayback-restore",
   "scripts": {
