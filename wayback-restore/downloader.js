@@ -188,55 +188,42 @@ Process.prototype.list = function (callback) {
           es.map((record, next) => {
             record = JSON.parse(record);
 
-            if (this.maxPagesReached()) {
-              next();
-              //return;
-            } else if (this.match_exclude_filter(record.original)) {
+            if (this.match_exclude_filter(record.original)) {
               debug('Asset excluded:', record);
               next();
             } else if (!this.match_only_filter(record.original)) {
               debug('Asset filtered out:', record);
               next();
             } else {
-              const asset = new Asset.Asset();
+              if (this.options.limit > 0 && num_files >= this.options.limit) {
+                next();
+              } else {
+                const asset = new Asset.Asset();
 
-              asset.key = record.urlkey;
-              asset.original_url = record.original;
-              asset.timestamp = record.timestamp;
-              asset.mimetype = record.mimetype;
-              asset.type = Asset.convertMimeType(record.mimetype);
+                asset.key = record.urlkey;
+                asset.original_url = record.original;
+                asset.timestamp = record.timestamp;
+                asset.mimetype = record.mimetype;
+                asset.type = Asset.convertMimeType(record.mimetype);
+                debug('Listing:', asset);
 
-              this.emit(EVENT.CDXQUERY, asset);
+                this.emit(EVENT.CDXQUERY, asset);
 
-              debug('Listing:', asset);
+                this.results.file_count++;
 
-              num_files++;
-              this.results.file_count++;
+                if (callback) {
+                  callback(asset);
+                }
 
-              // @NOTE: this.q does not exist if list() is invoked and not start
-              //if (this.q) {
-              //  this.q.push(asset);
-              //}
+                if (this.q) {
+                  this.q.push(asset);
+                }
 
-              if (callback) {
-                callback(asset);
+                next(null, asset);
               }
-
-              next(null, asset);
+              num_files++;
             }
           })
-        )
-        .pipe(
-          es.through(
-            (asset) => {
-              if (this.q) {
-                this.q.push(asset);
-              }
-            },
-            () => {
-              return num_files;
-            }
-          )
         );
     } catch (e) {
       reject(e);
@@ -314,6 +301,7 @@ Process.prototype.restoreFailed = function (error, asset) {
 };
 
 Process.prototype.maxPagesReached = function () {
+  console.log(this.results.restored_count, this.options.limit);
   return this.options.limit > 0 && this.results.restored_count >= this.options.limit;
 };
 
