@@ -40,6 +40,7 @@ Wayback.restore({
 Wayback.restore('http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk');
 */
 
+/*
 Wayback.restore({
   directory: '~/testrestore/restores/',
   url: 'http://web.archive.org/web/20150531/http://www.cashpropertysolutions.co.uk',
@@ -73,23 +74,28 @@ Wayback.restore({
     console.log('Snapshots Found: ', cdx.size);
   })
   .start();
+*/
 
 /**
  * Downloader Examples.
  */
-/*
+
 Wayback.downloader({
   concurrency: 5,
   directory: '/home/nick/testrestore',
   domain: 'trufish.org',
   exclude: '',
-  from: '2017',
-  limit: 20,
+  limit: 10,
   notify_on_finish: true,
   //only: '/.(gif|jpg|jpeg|png)$/i',
-  only: '.(gif|jpg|jpeg|png)$',
-  to: '2018',
-  list: false
+  //only: '.(gif|jpg|jpeg|png)$',
+  //from: '2017',
+  //to: '2018',
+
+  //from: '',
+  //to: '',
+
+  list: true
 
   //url: 'https://trufish.org/',
   //from: '20181001',
@@ -108,4 +114,3 @@ Wayback.downloader({
   .start((record) => {
     console.log('Asset', record.getSnapshotUrl());
   });
-*/

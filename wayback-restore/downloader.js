@@ -69,13 +69,16 @@ function Process(options) {
     this.exclude_regex = new RegExp(this.options.exclude);
   }
 
-  let query = {};
+  let query = {
+    to: '',
+    from: ''
+  };
 
-  if (options.from !== '') {
+  if (options.from && options.from !== '') {
     query.from = options.from;
   }
 
-  if (options.to !== '') {
+  if (options.to && options.to !== '') {
     query.to = options.to;
   }
 

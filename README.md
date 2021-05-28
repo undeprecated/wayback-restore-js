@@ -1,6 +1,8 @@
 # Wayback Restore JS
 
-> A website restoration tool written for Node Js.
+> This package is still experimental.
+
+A website restoration tool written for Node Js.
 
 This package allows you to restore a website from web.archive.org. It was developed for Node JS and can be used in any Electron application.
 
