@@ -1,6 +1,6 @@
 # Wayback Restore JS
 
-> This package is still experimental.
+> This package is experimental.
 
 A website restoration tool written for Node Js.
 
@@ -208,6 +208,108 @@ Directory to output into.
 
 See Wayback.restore methods.
 
+### snapshot(options, callback)
+
+Use this to explore snapshots on web.archive.org by querying their CDX server.
+
+Returns a Promise with an array of Assets found.
+
+See https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#intro-and-usage for more information.
+
+#### callback (optional) - function(asset)
+
+This is an optional method that will be executed for each snapshot found in the snapshot search. The parameter received in the callback is an `Asset`.
+
+Example:
+```JavaScript
+Wayback.snapshot(
+  {
+    url: 'example.com',
+    filter: 'statuscode:200',
+    collapse: 'digest',
+    matchType: 'exact',
+    limit: 10,
+    from: '20210623',
+    to: '20210624'
+  },
+  (asset) => {
+    console.log('Snapshot', asset);
+  }
+);
+```
+
+#### options
+
+##### url
+
+A URL to search for snapshots for. Ex: example.com
+
+##### matchType
+
+Accepted values of `exact`, `prefix`, `host`, `domain`.
+
+Defaults to `exact`.
+
+See: 
+https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#url-match-scope
+
+##### outputFormat
+
+Defaults to `json`.
+
+See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#output-format-json
+
+##### fl - Array
+
+The fields to return.
+
+Defaults to `
+[
+      'urlkey',
+      'timestamp',
+      'original',
+      'mimetype',
+      'statuscode',
+      'digest',
+      'length'
+    ]`
+
+See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#field-order
+
+##### filter (optional)
+
+Defaults to: `statuscode:200`
+
+See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#filtering
+
+##### to
+
+Results may be filtered by timestamp using from= and to= params. The ranges are inclusive and are specified in the same 1 to 14 digit format used for wayback captures: yyyyMMddhhmmss
+
+See: Results may be filtered by timestamp using from= and to= params. The ranges are inclusive and are specified in the same 1 to 14 digit format used for wayback captures: yyyyMMddhhmmss
+
+##### from
+
+Results may be filtered by timestamp using from= and to= params. The ranges are inclusive and are specified in the same 1 to 14 digit format used for wayback captures: yyyyMMddhhmmss
+
+See: Results may be filtered by timestamp using from= and to= params. The ranges are inclusive and are specified in the same 1 to 14 digit format used for wayback captures: yyyyMMddhhmmss
+
+##### collapse 
+
+Defaults to: `digest`
+    
+See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#collapsing
+
+   
+##### limit
+
+Defaults to CDX's default value.
+
+See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#query-result-limits
+
+Note: `fastLatest=true` option is not supported.
+
+
 ### Asset (object)
 
 An `Asset` is an object that gets downloaded or restured and is returned by various events.
@@ -275,6 +377,25 @@ Wayback.downloader({
   })
   .start((asset) => {
     console.log('Asset', asset.getSnapshotUrl());
+  });
+```
+
+```JavaScript
+Wayback.snapshot({
+  url: 'example.com',
+  filter: 'statuscode:200',
+  collapse: 'digest',
+  matchType: 'exact',
+  limit: 10,
+  from: '20210623',
+  to: '20210624'
+})
+  .then((snapshots) => {
+    console.log('snapshots', snapshots);
+    console.log('# snapshots found: ', snapshots.length);
+  })
+  .catch((error) => {
+    console.log('error', error);
   });
 ```
 

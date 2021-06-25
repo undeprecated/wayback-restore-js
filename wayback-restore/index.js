@@ -11,6 +11,7 @@
 var Restore = require('./restore');
 var Downloader = require('./downloader');
 var query = require('./cdx/query');
+var snapshot = require('./snapshot');
 var core = require('./core');
 
 module.exports = {
@@ -24,5 +25,6 @@ module.exports = {
   download: (options) => {
     return new Downloader(options);
   },
+  snapshot: snapshot.snapshot,
   cdx: query
 };

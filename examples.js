@@ -72,3 +72,43 @@ Wayback.downloader({
   .start((record) => {
     console.log('Asset', record.getSnapshotUrl());
   });
+
+/**
+ * Snapshot Explorer Examples.
+ *
+ * Wayback.snapshot allows you to find web assets that have been archived.
+ */
+
+// Find snapshots and execute a callback each time a snapshot is returned.
+Wayback.snapshot(
+  {
+    url: 'example.com',
+    filter: 'statuscode:200',
+    collapse: 'digest',
+    matchType: 'exact',
+    limit: 10,
+    from: '20210623',
+    to: '20210624'
+  },
+  (asset) => {
+    console.log('Snapshot', asset);
+  }
+);
+
+// Use a promise to receive all snapshots results
+Wayback.snapshot({
+  url: 'example.com',
+  filter: 'statuscode:200',
+  collapse: 'digest',
+  matchType: 'exact',
+  limit: 10,
+  from: '20210623',
+  to: '20210624'
+})
+  .then((snapshots) => {
+    console.log('snapshots', snapshots);
+    console.log('# snapshots found: ', snapshots.length);
+  })
+  .catch((error) => {
+    console.log('error', error);
+  });
