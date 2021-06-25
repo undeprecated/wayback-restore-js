@@ -5,19 +5,20 @@
  * Utility for querying the Wayback Machine CDX server.
  */
 
-"use strict";
-var request = require("request");
+'use strict';
+var request = require('request');
 
-var ArrayTransform = require("./array-transform");
-var JsonTransform = require("./json-transform");
-var FIELDS = require("./fields");
+var ArrayTransform = require('./array-transform');
+var JsonTransform = require('./json-transform');
+var FIELDS = require('./fields');
 
-var CDX_SERVER = "https://web.archive.org/cdx/search/cdx";
+var CDX_SERVER = 'https://web.archive.org/cdx/search/cdx';
 
 function Query(config) {
-  this.url = "";
-  this.options = Object.assign({
-      url: "",
+  this.url = '';
+  this.options = Object.assign(
+    {
+      url: '',
       fl: [
         FIELDS.URLKEY,
         FIELDS.TIMESTAMP,
@@ -27,7 +28,7 @@ function Query(config) {
         FIELDS.DIGEST,
         FIELDS.LENGTH
       ],
-      outputFormat: "json",
+      outputFormat: 'json',
       matchType: null,
       // @TODO - need to un-gzip output
       //gzip: 'true',
@@ -35,7 +36,8 @@ function Query(config) {
       filter: null,
       limit: null,
       offset: null,
-      to: null
+      to: null,
+      from: null
     },
     config
   );
@@ -49,17 +51,17 @@ Query.prototype.__init__ = function () {
     if (this.options.hasOwnProperty(key) && this.options[key] !== null) {
       var value;
 
-      if (key === "fl") {
-        value = this.options[key].join(",");
+      if (key === 'fl') {
+        value = this.options[key].join(',');
       } else {
         value = this.options[key];
       }
 
-      querystring.push(key + "=" + value);
+      querystring.push(key + '=' + value);
     }
   }
 
-  this.url = CDX_SERVER + "?" + querystring.join("&");
+  this.url = CDX_SERVER + '?' + querystring.join('&');
 };
 
 /**
@@ -77,9 +79,7 @@ Query.prototype.stream = function () {
     fields: this.options.fl
   });
 
-  return request(this.url)
-    .pipe(arrayTransform)
-    .pipe(jsonTransform);
+  return request(this.url).pipe(arrayTransform).pipe(jsonTransform);
 };
 
 module.exports = Query;
