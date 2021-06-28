@@ -38,7 +38,7 @@ module.exports.snapshot = function snapshot(options, callback) {
       cdxQuery
         .stream()
         .on('end', () => {
-          resolve(snapshots);
+          resolve([snapshots, cdxQuery.url]);
         })
         .pipe(
           es.map((record, next) => {

@@ -390,9 +390,10 @@ Wayback.snapshot({
   from: '20210623',
   to: '20210624'
 })
-  .then((snapshots) => {
+  .then(([snapshots, url]) => {
     console.log('snapshots', snapshots);
     console.log('# snapshots found: ', snapshots.length);
+    console.log('CDX Query URL:', url);
   })
   .catch((error) => {
     console.log('error', error);
