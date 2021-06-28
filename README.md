@@ -254,8 +254,7 @@ See:
 https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#url-match-scope
 
 ##### output
-
-This parameter is not applicable.
+@deprecated since `0.0.13`
 
 Defaults to `json`.
 
