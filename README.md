@@ -255,6 +255,8 @@ https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#url-ma
 
 ##### output
 
+This parameter is not applicable.
+
 Defaults to `json`.
 
 See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#output-format-json

@@ -110,7 +110,7 @@ describe('downloader.js', function () {
       });
 
       expect(download.cdxQuery.url).to.equal(
-        'https://web.archive.org/cdx/search/cdx?url=example.com*&fl=urlkey,timestamp,original,mimetype,statuscode,digest,length&outputFormat=json&filter=statuscode:200&to=20181029143918&collapse=digest&from=20181001143918'
+        'https://web.archive.org/cdx/search/cdx?url=example.com*&fl=urlkey,timestamp,original,mimetype,statuscode,digest,length&filter=statuscode:200&from=20181001143918&to=20181029143918&collapse=digest'
       );
     });
 

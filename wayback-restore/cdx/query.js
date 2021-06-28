@@ -28,7 +28,6 @@ function Query(config) {
         FIELDS.DIGEST,
         FIELDS.LENGTH
       ],
-      outputFormat: 'json',
       matchType: null,
       // @TODO - need to un-gzip output
       //gzip: 'true',
@@ -36,8 +35,11 @@ function Query(config) {
       filter: null,
       limit: null,
       offset: null,
+      from: null,
       to: null,
-      from: null
+      collapse: 'digest'
+      // @FIX: this is
+      //output: 'json'
     },
     config
   );
