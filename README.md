@@ -253,7 +253,7 @@ Defaults to `exact`.
 See: 
 https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#url-match-scope
 
-##### outputFormat
+##### output
 
 Defaults to `json`.
 

@@ -22,7 +22,7 @@ module.exports.snapshot = function snapshot(options, callback) {
     ],
     filter: options.filter || 'statuscode:200',
     collapse: options.collapse || 'digest',
-    outputFormat: options.outputFormat || 'json',
+    output: options.output || 'json',
     matchType: options.matchType || null,
     limit: options.limit || null,
     offset: options.offset || null,
