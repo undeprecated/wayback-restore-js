@@ -113,3 +113,17 @@ Wayback.snapshot({
   .catch((error) => {
     console.log('error', error);
   });
+
+/**
+ * Download a CDX record (Asset) by passing it an object with
+ * original_url, timestamp, and mimetype.
+ */
+const asset = Wayback.createAsset({
+  original_url: 'http://example.com/',
+  timestamp: '20210123020319',
+  mimetype: 'text/html'
+});
+Wayback.downloadAsset(asset, '~/testrestore/').then((asset) => {
+  console.log('asset downloaded', asset);
+  console.log('to file', asset.restored_file);
+});

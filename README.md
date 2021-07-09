@@ -17,12 +17,16 @@ npm install wayback-restore
 ```JavaScript
 var Wayback = require("wayback-restore");
 
-Wayback.restore(options);
+Wayback.restore({...});
+Wayback.downloader({...});
+Wayback.snapshot({...});
 ```
 
 ## API
 
-### restore(options)
+### Wayback.restore(options)
+
+`restore` is a predefined process for restoring an entire website based on the options you specify. You would use this method if you wish to rebuild a website from a point in time.
 
 #### options
 
@@ -144,7 +148,9 @@ When the restore process has completed.
 })
 ```
 
-### downloader(options)
+### Wayback.downloader(options)
+
+This method is useful for downloading all snapshots. This is different from `restore` because this will download all snapshots from a point in time giving you multiple snapshots for the same asset.
 
 #### options
 
@@ -208,9 +214,9 @@ Directory to output into.
 
 See Wayback.restore methods.
 
-### snapshot(options, callback)
+### Wayback.snapshot(options, callback)
 
-Use this to explore snapshots on web.archive.org by querying their CDX server.
+Use this to explore snapshots on web.archive.org by querying their CDX server. You can use this to build your own downloader.
 
 Returns a Promise with an array of Assets found.
 
@@ -310,8 +316,7 @@ See: https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server#q
 
 Note: `fastLatest=true` option is not supported.
 
-
-### Asset (object)
+### Wayback.Asset (object)
 
 An `Asset` is an object that gets downloaded or restured and is returned by various events.
 
@@ -339,6 +344,22 @@ An `Asset` is an object that gets downloaded or restured and is returned by vari
 ##### Asset.getSnapShot(flag)
 
 Set to `true` to fetch file in its original state, without any processing by the Wayback Machine or waybackpack. You will likely want this to always be `true`.
+
+
+
+### Wayback.createAsset(obj)
+
+Helper method to create an `Asset` object.
+
+`obj` maps to `Asset.properties`
+
+### Wayback.downloadAsset(Asset, directory)
+
+This method will download an `Asset` to the directory provided.
+
+`Asset` is an Asset object.
+
+`directory` is the directory to write the asset content to.
 
 
 ## Examples
@@ -401,11 +422,14 @@ Wayback.snapshot({
   });
 ```
 
+More examples are in the example.js file of this repository.
+
 ## TODO
 
 - Improve documentation
 - Improve this modules API
 - Create a CLI. Maybe as a separate module?
+
 
 ## Need a GUI Application?
 

@@ -20,23 +20,24 @@ var http = require('./http');
 var ARCHIVE_TEMPLATE = core.ARCHIVE_TEMPLATE;
 var RESTORE_STATUS = core.RESTORE_STATUS;
 
-function Asset() {
-  // CDX urlkey
-  this.key = null;
+function Asset(init) {
+  init = init || {};
 
   // the url to restore
-  this.original_url = '';
+  this.original_url = init.original_url || '';
+
+  this.timestamp = init.timestamp || '';
+  // mimetype: html, image, css, js, based on wayback types
+  this.mimetype = init.mimetype || '';
+
+  // CDX urlkey
+  this.key = null;
 
   // path to local file
   this.restored_file = '';
 
-  this.timestamp = '';
-
   // restored | failed | unarchived
   this.status = RESTORE_STATUS.EMPTY;
-
-  // mimetype: html, image, css, js, based on wayback types
-  this.mimetype = '';
 
   this.type = '';
 }
@@ -151,7 +152,7 @@ Asset.prototype.extractLinks = function ($) {
 /**
  * Converts a URL to a local file path and name
  */
-Asset.prototype.localFilePath = function () {
+Asset.prototype.getLocalFilePath = function () {
   var url = this.original_url;
   var ext = mime.extension(this.mimetype);
 
@@ -235,7 +236,12 @@ function contentCleanup(content, domain) {
     return content;
 }*/
 
-module.exports = {
-  Asset: Asset,
-  convertMimeType: convertMimeType
+module.exports.Asset = Asset;
+module.exports.convertMimeType = convertMimeType;
+module.exports.createAsset = (obj) => {
+  return new Asset(obj);
+};
+module.exports.downloadAsset = async (asset, directory) => {
+  var local_file = path.join(directory, asset.timestamp, asset.getLocalFilePath());
+  return await asset.download(local_file);
 };
