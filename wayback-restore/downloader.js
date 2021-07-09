@@ -9,14 +9,11 @@ var EventEmitter = require('events');
 var path = require('path');
 var async = require('async');
 
-// Third-Party Modules
-var fs = require('fs-extra');
-
 // Local Modules
 var core = require('./core');
 var utils = require('./utils');
 var Asset = require('./asset');
-var CdxQuery = require('./cdx/query');
+const { snapshot } = require('./snapshot');
 
 // Events fired by Process
 var EVENT = core.EVENTS;
@@ -27,12 +24,10 @@ function Process(options) {
   EventEmitter.call(this);
 
   const defaults = {
-    url: '', // an url snapshot
-    domain: '', // example.com
+    url: '', // a url snapshot
     from: '', // earliest files to download from: yyyyMMddhhmmss
     to: '', // latest timestamp:  yyyyMMddhhmmss
     limit: 0, // limit number of files to download,
-    exact_url: false, // true - downloads only this file and not full site
     list: false, // true - will only download,
     concurrency: 1, // number of files to download at the same time,
     only: '', // only include these file types
@@ -40,69 +35,61 @@ function Process(options) {
     directory: '.' // restores to current directory,
   };
 
-  // Example: Wayback.downloader("http://web.archive.org/web/20150531/http://www.example.com")
-  if (typeof options === 'string') {
-    let url = options;
-    options = {};
-    options.url = url;
-    options.exact_url = true;
-  }
-
   this.options = Object.assign(defaults, options);
 
-  if (this.options.url !== '') {
-    const { domain } = utils.parse(this.options.url);
-    this.options.domain = domain;
-  }
+  this.domain = utils.getDomain(this.options.url);
 
-  if (this.options.domain === '') {
-    throw 'Invalid options: domain required';
+  if (!this.domain || this.domain === '') {
+    throw 'Could not parse domain';
   }
 
   debug('Options', this.options);
 
+  this.snapshot = {
+    url: this.options.url,
+    fl: this.options.fl || [
+      'urlkey',
+      'timestamp',
+      'original',
+      'mimetype',
+      'statuscode',
+      'digest',
+      'length'
+    ],
+    filter: this.options.filter || 'statuscode:200',
+    collapse: this.options.collapse || 'digest',
+    matchType: this.options.matchType || null,
+    limit: this.options.limit || null,
+    offset: this.options.offset || null,
+    to: null,
+    from: null
+  };
+
+  if (this.options.from && this.options.from !== '') {
+    this.snapshot.from = this.options.from;
+  }
+
+  if (this.options.to && this.options.to !== '') {
+    this.snapshot.to = this.options.to;
+  }
+
   if (this.options.only !== '') {
-    this.only_include_regex = new RegExp(this.options.only);
+    this.snapshot.only = this.options.only;
   }
 
   if (this.options.exclude !== '') {
-    this.exclude_regex = new RegExp(this.options.exclude);
+    this.snapshot.exclude = this.options.exclude;
   }
-
-  let query = {
-    to: '',
-    from: ''
-  };
-
-  if (options.from && options.from !== '') {
-    query.from = options.from;
-  }
-
-  if (options.to && options.to !== '') {
-    query.to = options.to;
-  }
-
-  if (options.exact_url) {
-    query.url = this.options.url;
-  } else {
-    query.url = this.options.domain + '*';
-  }
-
-  this.cdxQuery = new CdxQuery({
-    filter: 'statuscode:200',
-    collapse: 'digest',
-    ...query
-  });
 
   /**
    * Base directory where a restore directory will be output.
    */
   this.restore_directory = path.normalize(
-    utils.resolveHome(this.options.directory) + '/' + this.options.domain
+    utils.resolveHome(this.options.directory) + '/' + this.domain
   );
 
   this.results = {
-    domain: this.options.domain,
+    domain: this.domain,
     directory: this.restore_directory,
     started: '',
     ended: '',
@@ -110,7 +97,9 @@ function Process(options) {
     file_count: 0,
     restored_count: 0,
     failed_count: 0,
-    options: this.options
+    options: this.options,
+    numSnapshots: 0,
+    cdxUrl: ''
   };
 }
 
@@ -143,22 +132,13 @@ Process.prototype.start = async function (callback) {
 
   this.emit(EVENT.STARTED, this.results.started);
 
-  /*if (this.options.list) {
-    await this.list();
-    //this.complete();
-    return;
-  }*/
-
-  await this.createOutputDirectory(this.restore_directory);
+  await utils.createOutputDirectory(this.restore_directory);
 
   /**
    * Sets up our restore queue.
    */
   this.q = async.queue(async (asset, cb) => {
-    if (!this.options.list) {
-      await this.restoreAsset(asset);
-    }
-
+    await this.restoreAsset(asset);
     callback(asset);
     cb();
   }, this.options.concurrency);
@@ -168,93 +148,26 @@ Process.prototype.start = async function (callback) {
   };
 
   // This method finds all CDX snapshots and restores based on the results.
-  await this.list();
+  const [snapshots, cdxUrl] = await snapshot(this.snapshot, (asset) => {
+    this.q.push(asset);
+  });
+
+  this.results.numSnapshots = snapshots.length;
+  this.results.cdxUrl = cdxUrl;
 
   // complete event will never fire if nothing goes into the queue
-  if (this.results.file_count === 0) {
+  if (snapshots.length === 0) {
+    //if (this.results.file_count === 0) {
     this.complete();
   }
 
   return this;
 };
 
-Process.prototype.list = function (callback) {
-  let num_files = 0;
-  return new Promise((resolve, reject) => {
-    try {
-      this.cdxQuery
-        .stream()
-        .on('end', () => {
-          resolve();
-        })
-        .pipe(
-          es.map((record, next) => {
-            record = JSON.parse(record);
-
-            if (this.match_exclude_filter(record.original)) {
-              debug('Asset excluded:', record);
-              next();
-            } else if (!this.match_only_filter(record.original)) {
-              debug('Asset filtered out:', record);
-              next();
-            } else {
-              if (this.options.limit > 0 && num_files >= this.options.limit) {
-                next();
-              } else {
-                const asset = new Asset.Asset();
-
-                asset.key = record.urlkey;
-                asset.original_url = record.original;
-                asset.timestamp = record.timestamp;
-                asset.mimetype = record.mimetype;
-                asset.type = Asset.convertMimeType(record.mimetype);
-                debug('Listing:', asset);
-
-                this.emit(EVENT.CDXQUERY, asset);
-
-                this.results.file_count++;
-
-                if (callback) {
-                  callback(asset);
-                }
-
-                if (this.q) {
-                  this.q.push(asset);
-                }
-
-                next(null, asset);
-              }
-              num_files++;
-            }
-          })
-        );
-    } catch (e) {
-      reject(e);
-    }
-  });
-};
-
-Process.prototype.match_exclude_filter = function (file_url) {
-  if (this.options.exclude !== '') {
-    return this.exclude_regex.test(file_url);
-  } else {
-    return false;
-  }
-};
-
-Process.prototype.match_only_filter = function (file_url) {
-  if (this.options.only !== '') {
-    return this.only_include_regex.test(file_url);
-  } else {
-    return true;
-  }
-};
-
 Process.prototype.restoreAsset = async function (asset) {
   try {
     // Stores files as /restore-dir/domain.com/yyyymmddhhmmss/index.html
-    var local_file = path.join(this.restore_directory, asset.timestamp, asset.localFilePath());
-
+    var local_file = path.join(this.restore_directory, asset.timestamp, asset.getLocalFilePath());
     this.setRestoring(asset);
     await asset.download(local_file);
     this.setRestored(asset);
@@ -301,22 +214,6 @@ Process.prototype.restoreFailed = function (error, asset) {
   this.emit(RESTORE_STATUS.FAILED, asset);
   this.emit(EVENTS.ERROR, error);
   return asset;
-};
-
-Process.prototype.maxPagesReached = function () {
-  console.log(this.results.restored_count, this.options.limit);
-  return this.options.limit > 0 && this.results.restored_count >= this.options.limit;
-};
-
-/**
- * Create base directory for restore output.
- */
-Process.prototype.createOutputDirectory = async function (dir) {
-  try {
-    await fs.emptyDir(dir);
-  } catch (err) {
-    debug('Error creating output directory', err);
-  }
 };
 
 module.exports = Process;
