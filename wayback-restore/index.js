@@ -8,11 +8,11 @@
  *
  */
 
+var core = require('./core');
+var { snapshot } = require('./snapshot');
+var { downloadAsset, createAsset } = require('./asset');
 var Restore = require('./restore');
 var Downloader = require('./downloader');
-var query = require('./cdx/query');
-var snapshot = require('./snapshot');
-var core = require('./core');
 
 module.exports = {
   VERSION: core.VERSION,
@@ -22,9 +22,7 @@ module.exports = {
   downloader: (options) => {
     return new Downloader(options);
   },
-  download: (options) => {
-    return new Downloader(options);
-  },
-  snapshot: snapshot.snapshot,
-  cdx: query
+  snapshot,
+  createAsset,
+  downloadAsset
 };
