@@ -8,6 +8,7 @@
 'use strict';
 var request = require('request');
 
+var RecordTransform = require('./record-transform');
 var ArrayTransform = require('./array-transform');
 var JsonTransform = require('./json-transform');
 var FIELDS = require('./fields');
@@ -72,6 +73,10 @@ Query.prototype.__init__ = function () {
  * @return JSON string
  */
 Query.prototype.stream = function () {
+  var recordTransform = new RecordTransform({
+    objectMode: true
+  });
+
   var arrayTransform = new ArrayTransform({
     objectMode: true
   });
@@ -81,7 +86,7 @@ Query.prototype.stream = function () {
     fields: this.options.fl
   });
 
-  return request(this.url).pipe(arrayTransform).pipe(jsonTransform);
+  return request(this.url).pipe(recordTransform).pipe(arrayTransform).pipe(jsonTransform);
 };
 
 module.exports = Query;
