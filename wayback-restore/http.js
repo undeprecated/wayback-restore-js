@@ -6,11 +6,11 @@
  * based on the mime type.
  */
 
-var debug = require("debug")("wayback:http");
+var debug = require('debug')('wayback:http');
 
-var fs = require("fs");
-var https = require("https");
-var request = require("request");
+var fs = require('fs');
+var https = require('https');
+var request = require('request');
 
 const httpsAgent = new https.Agent({
   maxSockets: 5,
@@ -23,7 +23,7 @@ async function download(url, path) {
       url: url,
       agent: httpsAgent,
       headers: {
-        "User-Agent": "Wayback Restore"
+        'User-Agent': 'wayback-restore npm'
       }
     });
   }
@@ -34,11 +34,11 @@ async function download(url, path) {
       url: url,
       agent: httpsAgent,
       headers: {
-        "User-Agent": "Wayback Restore"
+        'User-Agent': 'wayback-restore npm'
       }
     }).pipe(writer);
-    writer.on("finish", resolve);
-    writer.on("error", reject);
+    writer.on('finish', resolve);
+    writer.on('error', reject);
   });
 }
 
