@@ -15,7 +15,6 @@ var async = require('async');
 var fs = require('fs-extra');
 var Fs = require('fs');
 var cheerio = require('cheerio');
-var mime = require('mime-types');
 
 // Local Modules
 var core = require('./core');
@@ -136,7 +135,7 @@ Process.prototype.start = async function () {
 
   this.emit(EVENT.STARTED, this.results.started);
 
-  await this.createOutputDirectory(this.restore_directory);
+  await utils.createOutputDirectory(this.restore_directory);
 
   try {
     await this.fetchCdx();
@@ -162,33 +161,12 @@ Process.prototype.start = async function () {
 
   this.q.push(asset);
 
-  /**
-   * This method finds all CDX snapshots and restores based on the results.
-   */
-  /*
-    await this.fetchCdx({
-      url: this.settings.domain + "*",
-      filter: "statuscode:200",
-      collapse: "timestamp:8,digest",
-      to: this.settings.timestamp
-    });
-
-    this.q = async.queue((asset, callback) => {
-      this.restoreAsset(asset, callback);
-    }, this.settings.concurrency);
-
-    this.q.drain = async () => {
-      return await this.complete();
-    };
-
-    this.db.cdx.forEach((asset, keys) => {
-      this.q.push(asset);
-    });
-    */
   return this;
 };
 
+// @TODO: this should call Wayback.snapshot() instead
 Process.prototype.fetchCdx = async function () {
+  let index = 0;
   return new Promise((resolve, reject) => {
     this.cdxQuery
       .stream()
@@ -201,6 +179,7 @@ Process.prototype.fetchCdx = async function () {
           record = JSON.parse(record);
 
           var asset = new Asset.Asset();
+          asset.index = index++;
           asset.key = record.urlkey;
           asset.original_url = record.original;
           asset.timestamp = record.timestamp;
@@ -285,10 +264,7 @@ Process.prototype.restoreHandler = async function (asset) {
 };
 
 Process.prototype.restoreAsset = async function (asset) {
-  var local_file = path.join(
-    this.restore_directory,
-    this.convertToLocalFilePath(asset.original_url, mime.extension(asset.mimetype))
-  );
+  var local_file = path.join(this.restore_directory, asset.getLocalFilePath());
 
   this.setRestoring(asset);
 
@@ -380,17 +356,6 @@ Process.prototype.maxPagesReached = function () {
   return this.settings.max_pages > 0 && this.results.restored_count >= this.settings.max_pages;
 };
 
-/**
- * Create base directory for restore output.
- */
-Process.prototype.createOutputDirectory = async function (dir) {
-  try {
-    await fs.emptyDir(dir);
-  } catch (err) {
-    debug('Error creating output directory', err);
-  }
-};
-
 Process.prototype.getLogData = function (filename) {
   var self = this;
   var log = {};
@@ -434,30 +399,6 @@ Process.prototype.cleanupWaybackUrl = function (link) {
   url = url.replace(/^\/+/i, '');
 
   return url;
-};
-
-/**
- * Converts a URL to a local file path and name
- */
-Process.prototype.convertToLocalFilePath = function (url, ext) {
-  var obj = path.parse(utils.makeRelative(url));
-
-  var dir = obj.dir;
-  var filename = obj.name !== '' ? obj.name : 'index';
-  //var ext = obj.ext !== "" ? obj.ext : ".html";
-
-  dir = dir.replace(/^\//, ''); // remove leading slash
-  dir = dir.replace(/\/$/, ''); // remove trailing slash
-
-  /**
-   * converts permalinks that are "folders" with no extension to an html page
-   * Example: http://example.com/test to text/index.html
-   */
-  if (obj.name && obj.ext === '' && ext === 'html') {
-    return path.join(dir, filename, 'index.' + ext);
-  }
-
-  return path.join(dir, filename + '.' + ext);
 };
 
 /**
