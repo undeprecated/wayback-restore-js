@@ -7,12 +7,18 @@ var os = require('os');
 var url = require('url');
 var path = require('path');
 var mod_url = require('url');
-var parse_domain = require('parse-domain');
-
+var parseDomain = require('parse-domain');
+var fs = require('fs-extra');
 var core = require('./core');
 const { time } = require('console');
 
 var debug = require('debug')('wayback:utils');
+
+function getDomain(path) {
+  var pd = parseDomain(path);
+
+  return pd.domain + '.' + pd.tld;
+}
 
 /**
  * Convert a URL to relative path by removing the hostname.
@@ -63,7 +69,7 @@ function convertLinkToKey(domain, link) {
 }
 
 function _keyLead(domain) {
-  var pd = parse_domain(domain),
+  var pd = parseDomain(domain),
     tld = pd.tld.split('.').reverse().join(',');
   return tld + ',' + pd.domain + ')';
 }
@@ -99,6 +105,41 @@ function timestampToDay(timestamp) {
   );
 }
 
+/**
+ * Converts a URL to a local file path and name
+ */
+function convertToLocalFilePath(url, ext) {
+  var obj = path.parse(utils.makeRelative(url));
+
+  var dir = obj.dir;
+  var filename = obj.name !== '' ? obj.name : 'index';
+  //var ext = obj.ext !== "" ? obj.ext : ".html";
+
+  dir = dir.replace(/^\//, ''); // remove leading slash
+  dir = dir.replace(/\/$/, ''); // remove trailing slash
+
+  /**
+   * converts permalinks that are "folders" with no extension to an html page
+   * Example: http://example.com/test to text/index.html
+   */
+  if (obj.name && obj.ext === '' && ext === 'html') {
+    return path.join(dir, filename, 'index.' + ext);
+  }
+
+  return path.join(dir, filename + '.' + ext);
+}
+
+/**
+ * Create base directory for restore output.
+ */
+async function createOutputDirectory(dir) {
+  try {
+    await fs.emptyDir(dir);
+  } catch (err) {
+    debug('Error creating output directory', err);
+  }
+}
+
 const Wayback = {
   /**
    * Parses a wayback machine machine url into pieces.
@@ -127,7 +168,7 @@ const Wayback = {
 
     var myURL = mod_url.parse(web);
 
-    var link = parse_domain(myURL.hostname || myURL.pathname);
+    var link = parseDomain(myURL.hostname || myURL.pathname);
 
     if (link) {
       return link.domain + '.' + link.tld;
@@ -152,10 +193,13 @@ const Wayback = {
 };
 
 module.exports = {
-  makeRelative: makeRelative,
-  resolveHome: resolveHome,
-  convertLinkToKey: convertLinkToKey,
-  msToTime: msToTime,
-  timestampToDay: timestampToDay,
+  makeRelative,
+  resolveHome,
+  convertLinkToKey,
+  msToTime,
+  timestampToDay,
+  convertToLocalFilePath,
+  createOutputDirectory,
+  getDomain,
   ...Wayback
 };

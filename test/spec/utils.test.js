@@ -44,4 +44,15 @@ describe('utils.js', function () {
       done();
     });
   });
+
+  describe('getDomain', function () {
+    it('example.com', function (done) {
+      assert.equal(utils.getDomain('example.com'), 'example.com');
+      done();
+    });
+    it('example.co.uk', function (done) {
+      assert.equal(utils.getDomain('example.co.uk'), 'example.co.uk');
+      done();
+    });
+  });
 });
